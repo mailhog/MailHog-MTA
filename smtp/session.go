@@ -7,6 +7,8 @@ import (
 	"log"
 	"strings"
 
+	"github.com/ian-kent/Go-MailHog/MailHog-MTA/backend"
+	"github.com/ian-kent/Go-MailHog/MailHog-MTA/backend/local"
 	"github.com/ian-kent/Go-MailHog/data"
 	"github.com/ian-kent/Go-MailHog/smtp/protocol"
 )
@@ -18,18 +20,27 @@ type Session struct {
 	remoteAddress string
 	isTLS         bool
 	line          string
+
+	authBackend backend.AuthService
+	identity    *backend.Identity
 }
 
 // Accept starts a new SMTP session using io.ReadWriteCloser
 func Accept(remoteAddress string, conn io.ReadWriteCloser, hostname string) {
 	proto := protocol.NewProtocol()
 	proto.Hostname = hostname
-	session := &Session{conn, proto, remoteAddress, false, ""}
+
+	// FIXME make configurable (and move out of session?!)
+	localBackend := &local.Backend{}
+	localBackend.Configure(nil)
+
+	session := &Session{conn, proto, remoteAddress, false, "", localBackend, nil}
 	proto.LogHandler = session.logf
 	proto.MessageReceivedHandler = session.acceptMessage
 	proto.ValidateSenderHandler = session.validateSender
 	proto.ValidateRecipientHandler = session.validateRecipient
 	proto.ValidateAuthenticationHandler = session.validateAuthentication
+	proto.GetAuthenticationMechanismsHandler = session.authBackend.Mechanisms
 
 	session.logf("Starting session")
 	session.Write(proto.Start())
@@ -39,6 +50,11 @@ func Accept(remoteAddress string, conn io.ReadWriteCloser, hostname string) {
 }
 
 func (c *Session) validateAuthentication(mechanism string, args ...string) (errorReply *protocol.Reply, ok bool) {
+	i, e, ok := c.authBackend.Authenticate(mechanism, args...)
+	if e != nil || !ok {
+		return protocol.ReplyInvalidAuth(), false
+	}
+	c.identity = i
 	return nil, true
 }
 

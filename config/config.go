@@ -6,19 +6,49 @@ import (
 	"github.com/ian-kent/envconf"
 )
 
+type DeliveryMode int
+
+const (
+	NoDelivery = DeliveryMode(iota)
+	LocalDelivery
+	RelayDelivery
+)
+
+type DeliveryPolicy struct {
+	DeliveryMode DeliveryMode
+}
+
+type MTAConfig struct {
+	gofigure interface{} `envPrefix:"MHMTA"`
+
+	NoAuthPolicy DeliveryPolicy
+	AuthPolicy   DeliveryPolicy
+}
+
 func DefaultConfig() *Config {
+	if mtaCfg == nil {
+		mtaCfg = &MTAConfig{
+			NoAuthPolicy: DeliveryPolicy{LocalDelivery},
+			AuthPolicy:   DeliveryPolicy{RelayDelivery},
+		}
+		//gofigure.Gofigure(mtaCfg)
+	}
+
 	return &Config{
 		SMTPBindAddr: "0.0.0.0:25",
 		Hostname:     "mailhog.example",
+		MTAConfig:    mtaCfg,
 	}
 }
 
 type Config struct {
 	SMTPBindAddr string
 	Hostname     string
+	MTAConfig    *MTAConfig
 }
 
 var cfg = DefaultConfig()
+var mtaCfg *MTAConfig
 
 func Configure() *Config {
 	return cfg
