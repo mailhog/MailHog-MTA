@@ -27,9 +27,6 @@ type Session struct {
 	authBackend     backend.AuthService
 	deliveryBackend backend.DeliveryService
 	identity        *backend.Identity
-
-	// TODO configurable
-	requireAuth bool
 }
 
 // Accept starts a new SMTP session using io.ReadWriteCloser
@@ -87,7 +84,7 @@ func (c *Session) validateSender(from string) bool {
 }
 
 func (c *Session) verbFilter(verb string, args ...string) (errorReply *protocol.Reply) {
-	if c.requireAuth && c.proto.State == protocol.MAIL && c.identity == nil {
+	if c.server.PolicySet.RequireAuthentication && c.proto.State == protocol.MAIL && c.identity == nil {
 		verb = strings.ToUpper(verb)
 		if verb == "RSET" || verb == "QUIT" || verb == "NOOP" ||
 			verb == "EHLO" || verb == "HELO" || verb == "AUTH" {
