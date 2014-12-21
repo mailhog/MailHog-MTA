@@ -28,7 +28,8 @@ func Listen(cfg *config.Config, server *config.Server, exitCh chan int) *net.TCP
 			conn.(*net.TCPConn).RemoteAddr().String(),
 			io.ReadWriteCloser(conn),
 			server.Hostname,
-			false,
+			cfg,
+			server,
 		)
 	}
 }

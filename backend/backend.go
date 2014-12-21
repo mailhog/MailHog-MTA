@@ -1,6 +1,7 @@
 package backend
 
 import (
+	"github.com/ian-kent/Go-MailHog/MailHog-MTA/config"
 	"github.com/ian-kent/Go-MailHog/data"
 	"github.com/ian-kent/Go-MailHog/smtp/protocol"
 )
@@ -22,7 +23,7 @@ func (i UserIdentity) String() string {
 
 // Service represents a service implementation
 type Service interface {
-	Configure(map[string]string) error
+	Configure(*config.Config, *config.Server) error
 }
 
 // AuthService represents an authentication service implementation

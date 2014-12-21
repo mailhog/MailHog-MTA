@@ -9,6 +9,7 @@ import (
 
 	"github.com/ian-kent/Go-MailHog/MailHog-MTA/backend"
 	"github.com/ian-kent/Go-MailHog/MailHog-MTA/backend/local"
+	"github.com/ian-kent/Go-MailHog/MailHog-MTA/config"
 	"github.com/ian-kent/Go-MailHog/data"
 	"github.com/ian-kent/Go-MailHog/smtp/protocol"
 )
@@ -20,7 +21,8 @@ type Session struct {
 	remoteAddress string
 	isTLS         bool
 	line          string
-	submission    bool
+	config        *config.Config
+	server        *config.Server
 
 	authBackend     backend.AuthService
 	deliveryBackend backend.DeliveryService
@@ -31,13 +33,13 @@ type Session struct {
 }
 
 // Accept starts a new SMTP session using io.ReadWriteCloser
-func Accept(remoteAddress string, conn io.ReadWriteCloser, hostname string, submission bool) {
+func Accept(remoteAddress string, conn io.ReadWriteCloser, hostname string, cfg *config.Config, server *config.Server) {
 	proto := protocol.NewProtocol()
 	proto.Hostname = hostname
 
 	// FIXME make configurable (and move out of session?!)
 	localBackend := &local.Backend{}
-	localBackend.Configure(nil)
+	localBackend.Configure(cfg, server)
 
 	session := &Session{
 		conn:            conn,
@@ -45,11 +47,11 @@ func Accept(remoteAddress string, conn io.ReadWriteCloser, hostname string, subm
 		remoteAddress:   remoteAddress,
 		isTLS:           false,
 		line:            "",
-		submission:      submission,
 		authBackend:     localBackend,
 		deliveryBackend: localBackend,
 		identity:        nil,
-		requireAuth:     false,
+		config:          cfg,
+		server:          server,
 	}
 
 	proto.LogHandler = session.logf
