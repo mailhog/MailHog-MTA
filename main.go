@@ -2,11 +2,10 @@ package main
 
 import (
 	"flag"
-	"os"
+	"sync"
 
 	"github.com/ian-kent/Go-MailHog/MailHog-MTA/config"
 	"github.com/ian-kent/Go-MailHog/MailHog-MTA/smtp"
-	"github.com/ian-kent/go-log/log"
 )
 
 var conf *config.Config
@@ -23,14 +22,13 @@ func main() {
 
 	exitCh = make(chan int)
 
-	go smtp.ListenSMTP(conf, exitCh)
-	go smtp.ListenSubmission(conf, exitCh)
-
-	for {
-		select {
-		case <-exitCh:
-			log.Printf("Received exit signal")
-			os.Exit(0)
-		}
+	var wg sync.WaitGroup
+	for _, s := range conf.Servers {
+		wg.Add(1)
+		go func(s *config.Server) {
+			defer wg.Done()
+			smtp.Listen(conf, s, exitCh)
+		}(s)
 	}
+	wg.Wait()
 }

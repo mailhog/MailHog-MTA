@@ -1,63 +1,36 @@
 package config
 
-import (
-	"flag"
-
-	"github.com/ian-kent/envconf"
-)
-
-type DeliveryMode int
-
-const (
-	NoDelivery = DeliveryMode(iota)
-	LocalDelivery
-	RelayDelivery
-)
-
-type DeliveryPolicy struct {
-	DeliveryMode DeliveryMode
-}
-
-type MTAConfig struct {
-	gofigure interface{} `envPrefix:"MHMTA"`
-
-	NoAuthPolicy DeliveryPolicy
-	AuthPolicy   DeliveryPolicy
-}
-
 func DefaultConfig() *Config {
-	if mtaCfg == nil {
-		mtaCfg = &MTAConfig{
-			NoAuthPolicy: DeliveryPolicy{LocalDelivery},
-			AuthPolicy:   DeliveryPolicy{RelayDelivery},
-		}
-		//gofigure.Gofigure(mtaCfg)
-	}
-
 	return &Config{
-		SMTPBindAddr:       "0.0.0.0:25",
-		SubmissionBindAddr: "0.0.0.0:587",
-		Hostname:           "mailhog.example",
-		MTAConfig:          mtaCfg,
+		Servers: []*Server{
+			&Server{
+				BindAddr: "0.0.0.0:25",
+				Hostname: "mailhog.example",
+			},
+			&Server{
+				BindAddr: "0.0.0.0:587",
+				Hostname: "mailhog.example",
+			},
+		},
 	}
 }
 
 type Config struct {
-	SMTPBindAddr       string
-	SubmissionBindAddr string
-	Hostname           string
-	MTAConfig          *MTAConfig
+	Servers []*Server
+}
+
+type Server struct {
+	BindAddr string
+	Hostname string
+	// PolicySet
 }
 
 var cfg = DefaultConfig()
-var mtaCfg *MTAConfig
 
 func Configure() *Config {
 	return cfg
 }
 
 func RegisterFlags() {
-	flag.StringVar(&cfg.SubmissionBindAddr, "submissionbindaddr", envconf.FromEnvP("MHMTA_SUBMISSION_BIND_ADDR", "0.0.0.0:587").(string), "Submission bind interface and port, e.g. 0.0.0.0:587 or just :587")
-	flag.StringVar(&cfg.SMTPBindAddr, "smtpbindaddr", envconf.FromEnvP("MHMTA_SMTP_BIND_ADDR", "0.0.0.0:25").(string), "SMTP bind interface and port, e.g. 0.0.0.0:25 or just :25")
-	flag.StringVar(&cfg.Hostname, "hostname", envconf.FromEnvP("MHMTA_HOSTNAME", "mailhog.example").(string), "Hostname for EHLO/HELO response, e.g. mailhog.example")
+	// TODO
 }
