@@ -21,8 +21,9 @@ type Session struct {
 	isTLS         bool
 	line          string
 
-	authBackend backend.AuthService
-	identity    *backend.Identity
+	authBackend     backend.AuthService
+	deliveryBackend backend.DeliveryService
+	identity        *backend.Identity
 
 	// TODO configurable
 	requireAuth bool
@@ -38,14 +39,15 @@ func Accept(remoteAddress string, conn io.ReadWriteCloser, hostname string) {
 	localBackend.Configure(nil)
 
 	session := &Session{
-		conn:          conn,
-		proto:         proto,
-		remoteAddress: remoteAddress,
-		isTLS:         false,
-		line:          "",
-		authBackend:   localBackend,
-		identity:      nil,
-		requireAuth:   false,
+		conn:            conn,
+		proto:           proto,
+		remoteAddress:   remoteAddress,
+		isTLS:           false,
+		line:            "",
+		authBackend:     localBackend,
+		deliveryBackend: localBackend,
+		identity:        nil,
+		requireAuth:     false,
 	}
 
 	proto.LogHandler = session.logf
@@ -73,7 +75,7 @@ func (c *Session) validateAuthentication(mechanism string, args ...string) (erro
 }
 
 func (c *Session) validateRecipient(to string) bool {
-	return true
+	return c.deliveryBackend.WillDeliver(to, c.proto.Message.From, c.identity)
 }
 
 func (c *Session) validateSender(from string) bool {
