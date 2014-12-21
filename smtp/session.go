@@ -23,6 +23,9 @@ type Session struct {
 
 	authBackend backend.AuthService
 	identity    *backend.Identity
+
+	// TODO configurable
+	requireAuth bool
 }
 
 // Accept starts a new SMTP session using io.ReadWriteCloser
@@ -34,13 +37,24 @@ func Accept(remoteAddress string, conn io.ReadWriteCloser, hostname string) {
 	localBackend := &local.Backend{}
 	localBackend.Configure(nil)
 
-	session := &Session{conn, proto, remoteAddress, false, "", localBackend, nil}
+	session := &Session{
+		conn:          conn,
+		proto:         proto,
+		remoteAddress: remoteAddress,
+		isTLS:         false,
+		line:          "",
+		authBackend:   localBackend,
+		identity:      nil,
+		requireAuth:   false,
+	}
+
 	proto.LogHandler = session.logf
 	proto.MessageReceivedHandler = session.acceptMessage
 	proto.ValidateSenderHandler = session.validateSender
 	proto.ValidateRecipientHandler = session.validateRecipient
 	proto.ValidateAuthenticationHandler = session.validateAuthentication
 	proto.GetAuthenticationMechanismsHandler = session.authBackend.Mechanisms
+	proto.SMTPVerbFilter = session.verbFilter
 
 	session.logf("Starting session")
 	session.Write(proto.Start())
@@ -64,6 +78,18 @@ func (c *Session) validateRecipient(to string) bool {
 
 func (c *Session) validateSender(from string) bool {
 	return true
+}
+
+func (c *Session) verbFilter(verb string, args ...string) (errorReply *protocol.Reply) {
+	if c.requireAuth && c.proto.State == protocol.MAIL && c.identity == nil {
+		verb = strings.ToUpper(verb)
+		if verb == "RSET" || verb == "QUIT" || verb == "NOOP" ||
+			verb == "EHLO" || verb == "HELO" || verb == "AUTH" {
+			return nil
+		}
+		return protocol.ReplyUnrecognisedCommand()
+	}
+	return nil
 }
 
 func (c *Session) acceptMessage(msg *data.Message) (id string, err error) {
