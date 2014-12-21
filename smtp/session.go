@@ -20,6 +20,7 @@ type Session struct {
 	remoteAddress string
 	isTLS         bool
 	line          string
+	submission    bool
 
 	authBackend     backend.AuthService
 	deliveryBackend backend.DeliveryService
@@ -30,7 +31,7 @@ type Session struct {
 }
 
 // Accept starts a new SMTP session using io.ReadWriteCloser
-func Accept(remoteAddress string, conn io.ReadWriteCloser, hostname string) {
+func Accept(remoteAddress string, conn io.ReadWriteCloser, hostname string, submission bool) {
 	proto := protocol.NewProtocol()
 	proto.Hostname = hostname
 
@@ -44,6 +45,7 @@ func Accept(remoteAddress string, conn io.ReadWriteCloser, hostname string) {
 		remoteAddress:   remoteAddress,
 		isTLS:           false,
 		line:            "",
+		submission:      submission,
 		authBackend:     localBackend,
 		deliveryBackend: localBackend,
 		identity:        nil,
@@ -89,6 +91,7 @@ func (c *Session) verbFilter(verb string, args ...string) (errorReply *protocol.
 			verb == "EHLO" || verb == "HELO" || verb == "AUTH" {
 			return nil
 		}
+		// FIXME more appropriate error
 		return protocol.ReplyUnrecognisedCommand()
 	}
 	return nil

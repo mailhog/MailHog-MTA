@@ -23,7 +23,8 @@ func main() {
 
 	exitCh = make(chan int)
 
-	go smtp.Listen(conf, exitCh)
+	go smtp.ListenSMTP(conf, exitCh)
+	go smtp.ListenSubmission(conf, exitCh)
 
 	for {
 		select {

@@ -35,16 +35,18 @@ func DefaultConfig() *Config {
 	}
 
 	return &Config{
-		SMTPBindAddr: "0.0.0.0:25",
-		Hostname:     "mailhog.example",
-		MTAConfig:    mtaCfg,
+		SMTPBindAddr:       "0.0.0.0:25",
+		SubmissionBindAddr: "0.0.0.0:587",
+		Hostname:           "mailhog.example",
+		MTAConfig:          mtaCfg,
 	}
 }
 
 type Config struct {
-	SMTPBindAddr string
-	Hostname     string
-	MTAConfig    *MTAConfig
+	SMTPBindAddr       string
+	SubmissionBindAddr string
+	Hostname           string
+	MTAConfig          *MTAConfig
 }
 
 var cfg = DefaultConfig()
@@ -55,6 +57,7 @@ func Configure() *Config {
 }
 
 func RegisterFlags() {
+	flag.StringVar(&cfg.SubmissionBindAddr, "submissionbindaddr", envconf.FromEnvP("MHMTA_SUBMISSION_BIND_ADDR", "0.0.0.0:587").(string), "Submission bind interface and port, e.g. 0.0.0.0:587 or just :587")
 	flag.StringVar(&cfg.SMTPBindAddr, "smtpbindaddr", envconf.FromEnvP("MHMTA_SMTP_BIND_ADDR", "0.0.0.0:25").(string), "SMTP bind interface and port, e.g. 0.0.0.0:25 or just :25")
 	flag.StringVar(&cfg.Hostname, "hostname", envconf.FromEnvP("MHMTA_HOSTNAME", "mailhog.example").(string), "Hostname for EHLO/HELO response, e.g. mailhog.example")
 }
