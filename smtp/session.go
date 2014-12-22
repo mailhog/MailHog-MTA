@@ -8,55 +8,46 @@ import (
 	"strings"
 
 	"github.com/ian-kent/Go-MailHog/MailHog-MTA/backend"
-	"github.com/ian-kent/Go-MailHog/MailHog-MTA/backend/local"
-	"github.com/ian-kent/Go-MailHog/MailHog-MTA/config"
 	"github.com/ian-kent/Go-MailHog/data"
 	"github.com/ian-kent/Go-MailHog/smtp/protocol"
 )
 
 // Session represents a SMTP session using net.TCPConn
 type Session struct {
+	server *Server
+
 	conn          io.ReadWriteCloser
 	proto         *protocol.Protocol
 	remoteAddress string
 	isTLS         bool
 	line          string
-	config        *config.Config
-	server        *config.Server
-
-	authBackend     backend.AuthService
-	deliveryBackend backend.DeliveryService
-	identity        *backend.Identity
+	identity      *backend.Identity
 }
 
 // Accept starts a new SMTP session using io.ReadWriteCloser
-func Accept(remoteAddress string, conn io.ReadWriteCloser, hostname string, cfg *config.Config, server *config.Server) {
+func (s *Server) Accept(remoteAddress string, conn io.ReadWriteCloser) {
 	proto := protocol.NewProtocol()
-	proto.Hostname = hostname
-
-	// FIXME make configurable (and move out of session?!)
-	localBackend := &local.Backend{}
-	localBackend.Configure(cfg, server)
+	proto.Hostname = s.Hostname
 
 	session := &Session{
-		conn:            conn,
-		proto:           proto,
-		remoteAddress:   remoteAddress,
-		isTLS:           false,
-		line:            "",
-		authBackend:     localBackend,
-		deliveryBackend: localBackend,
-		identity:        nil,
-		config:          cfg,
-		server:          server,
+		server:        s,
+		conn:          conn,
+		proto:         proto,
+		remoteAddress: remoteAddress,
+		isTLS:         false,
+		line:          "",
+		identity:      nil,
 	}
 
+	// FIXME this all feels nasty
 	proto.LogHandler = session.logf
 	proto.MessageReceivedHandler = session.acceptMessage
 	proto.ValidateSenderHandler = session.validateSender
 	proto.ValidateRecipientHandler = session.validateRecipient
 	proto.ValidateAuthenticationHandler = session.validateAuthentication
-	proto.GetAuthenticationMechanismsHandler = session.authBackend.Mechanisms
+	if session.server != nil && session.server.AuthBackend != nil {
+		proto.GetAuthenticationMechanismsHandler = session.server.AuthBackend.Mechanisms
+	}
 	proto.SMTPVerbFilter = session.verbFilter
 
 	session.logf("Starting session")
@@ -67,7 +58,7 @@ func Accept(remoteAddress string, conn io.ReadWriteCloser, hostname string, cfg 
 }
 
 func (c *Session) validateAuthentication(mechanism string, args ...string) (errorReply *protocol.Reply, ok bool) {
-	i, e, ok := c.authBackend.Authenticate(mechanism, args...)
+	i, e, ok := c.server.AuthBackend.Authenticate(mechanism, args...)
 	if e != nil || !ok {
 		return protocol.ReplyInvalidAuth(), false
 	}
@@ -76,7 +67,7 @@ func (c *Session) validateAuthentication(mechanism string, args ...string) (erro
 }
 
 func (c *Session) validateRecipient(to string) bool {
-	return c.deliveryBackend.WillDeliver(to, c.proto.Message.From, c.identity)
+	return c.server.DeliveryBackend.WillDeliver(to, c.proto.Message.From, c.identity)
 }
 
 func (c *Session) validateSender(from string) bool {

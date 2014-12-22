@@ -35,7 +35,8 @@ func (rw *fakeRw) Write(p []byte) (n int, err error) {
 func TestAccept(t *testing.T) {
 	Convey("Accept should handle a connection", t, func() {
 		frw := &fakeRw{}
-		Accept("1.1.1.1:11111", frw, "localhost", nil, nil)
+		s := &Server{}
+		s.Accept("1.1.1.1:11111", frw)
 	})
 }
 
@@ -46,6 +47,7 @@ func TestSocketError(t *testing.T) {
 				return -1, errors.New("OINK")
 			},
 		}
-		Accept("1.1.1.1:11111", frw, "localhost", nil, nil)
+		s := &Server{}
+		s.Accept("1.1.1.1:11111", frw)
 	})
 }
