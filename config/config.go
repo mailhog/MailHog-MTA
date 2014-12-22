@@ -30,17 +30,22 @@ type Server struct {
 type PolicySet struct {
 	RequireAuthentication bool
 	RequireLocalDelivery  bool
+	MaximumRecipients     int
 }
 
 func DefaultSubmissionPolicySet() PolicySet {
 	return PolicySet{
 		RequireAuthentication: true,
+		RequireLocalDelivery:  false,
+		MaximumRecipients:     500,
 	}
 }
 
 func DefaultSMTPPolicySet() PolicySet {
 	return PolicySet{
-		RequireLocalDelivery: true,
+		RequireAuthentication: false,
+		RequireLocalDelivery:  true,
+		MaximumRecipients:     500,
 	}
 }
 

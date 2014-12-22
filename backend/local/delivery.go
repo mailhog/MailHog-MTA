@@ -17,5 +17,5 @@ func (l *Backend) WillDeliver(from, to string, as *backend.Identity) bool {
 
 // MaxRecipients implements DeliveryService.MaxRecipients
 func (l *Backend) MaxRecipients(as *backend.Identity) int {
-	return 500
+	return l.server.PolicySet.MaximumRecipients
 }
