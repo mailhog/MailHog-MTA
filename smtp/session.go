@@ -70,6 +70,9 @@ func (c *Session) validateAuthentication(mechanism string, args ...string) (erro
 }
 
 func (c *Session) validateRecipient(to string) bool {
+	if c.server.DeliveryBackend == nil {
+		return false
+	}
 	maxRecipients := c.server.DeliveryBackend.MaxRecipients(c.identity)
 	if maxRecipients > -1 && len(c.proto.Message.To) > maxRecipients {
 		return false
