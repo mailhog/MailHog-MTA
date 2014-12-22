@@ -58,6 +58,9 @@ func (s *Server) Accept(remoteAddress string, conn io.ReadWriteCloser) {
 }
 
 func (c *Session) validateAuthentication(mechanism string, args ...string) (errorReply *protocol.Reply, ok bool) {
+	if c.server.AuthBackend == nil {
+		return protocol.ReplyInvalidAuth(), false
+	}
 	i, e, ok := c.server.AuthBackend.Authenticate(mechanism, args...)
 	if e != nil || !ok {
 		return protocol.ReplyInvalidAuth(), false
