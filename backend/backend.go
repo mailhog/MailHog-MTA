@@ -11,16 +11,6 @@ type Identity interface {
 	String() string
 }
 
-// UserIdentity represents a users identity
-type UserIdentity struct {
-	Username string
-}
-
-// String implements Identity.String
-func (i UserIdentity) String() string {
-	return i.Username
-}
-
 // Service represents a service implementation
 //
 // Combined service implementations should not assume that
