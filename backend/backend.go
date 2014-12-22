@@ -22,6 +22,9 @@ func (i UserIdentity) String() string {
 }
 
 // Service represents a service implementation
+//
+// Combined service implementations should not assume that
+// all individual service components will be used.
 type Service interface {
 	Configure(*config.Config, *config.Server) error
 }
@@ -38,4 +41,29 @@ type DeliveryService interface {
 	Service
 	Deliver(msg *data.Message) (id string, err error)
 	WillDeliver(from, to string, as *Identity) bool
+	MaxRecipients(as *Identity) int
 }
+
+// ResolverService represents an address resolver implementation
+// FIXME what this all actually means is "will you accept messages for this address"
+// FIXME and the only responses are: yes, no
+// FIXME if yes, the reasons can be: i own the mailbox, i can deliver to the mailbox, i'll relay mail for you
+// FIXME it might be clearer to use that terminology?
+type ResolverService interface {
+	Service
+	Resolve(address string) (ResolvedState, error)
+}
+
+// ResolvedState represents the resolved state of an address
+type ResolvedState uint8
+
+const (
+	// ResolvedNotFound is returned for non-existant mailboxes at local domains
+	ResolvedNotFound = ResolvedState(iota)
+	// ResolvedPrimaryLocal is returned for mailboxes at local primary domains
+	ResolvedPrimaryLocal
+	// ResolvedSecondaryLocal is returned for mailboxes at local secondary domains
+	ResolvedSecondaryLocal
+	// ResolvedRemote is returned for mailboxes at unrecognised domains
+	ResolvedRemote
+)

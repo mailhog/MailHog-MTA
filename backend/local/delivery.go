@@ -14,3 +14,8 @@ func (l *Backend) Deliver(msg *data.Message) (id string, err error) {
 func (l *Backend) WillDeliver(from, to string, as *backend.Identity) bool {
 	return true
 }
+
+// MaxRecipients implements DeliveryService.MaxRecipients
+func (l *Backend) MaxRecipients(as *backend.Identity) int {
+	return 500
+}
