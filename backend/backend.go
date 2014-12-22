@@ -15,6 +15,10 @@ type Identity interface {
 //
 // Combined service implementations should not assume that
 // all individual service components will be used.
+//
+// Configure will only be called once for each distinct Go value.
+// E.g., using a combined service implementation which provides
+// multiple services will only have its Configure function called once.
 type Service interface {
 	Configure(*config.Config, *config.Server) error
 }

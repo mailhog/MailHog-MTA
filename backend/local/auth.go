@@ -11,6 +11,15 @@ import (
 
 var mechanisms = []string{"PLAIN"}
 
+// UserIdentity implements Identity
+type UserIdentity struct {
+	Username string
+}
+
+func (u UserIdentity) String() string {
+	return u.Username
+}
+
 // TODO abstract away password mechanism and identity retrieval
 
 // Authenticate implements AuthService.Authenticate
@@ -35,7 +44,7 @@ func (l *Backend) Authenticate(mechanism string, args ...string) (identity *back
 			ok = false
 			return
 		}
-		id := backend.Identity(backend.UserIdentity{user})
+		id := backend.Identity(UserIdentity{user})
 		identity = &id
 		ok = true
 		return
