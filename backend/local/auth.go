@@ -13,11 +13,16 @@ var mechanisms = []string{"PLAIN"}
 
 // UserIdentity implements Identity
 type UserIdentity struct {
-	Username string
+	Username     string
+	validSenders map[string]bool
 }
 
 func (u UserIdentity) String() string {
 	return u.Username
+}
+func (u UserIdentity) IsValidSender(sender string) bool {
+	_, ok := u.validSenders[sender]
+	return ok
 }
 
 // TODO abstract away password mechanism and identity retrieval
@@ -35,8 +40,8 @@ func (l *Backend) Authenticate(mechanism string, args ...string) (identity *back
 
 	user, pass := args[0], args[1]
 
-	if pw, k := l.authMap[user]; k {
-		err := bcrypt.CompareHashAndPassword(pw, []byte(pass))
+	if u, k := l.authMap[user]; k {
+		err := bcrypt.CompareHashAndPassword(u.Password, []byte(pass))
 
 		if err != nil {
 			// FIXME
@@ -44,7 +49,8 @@ func (l *Backend) Authenticate(mechanism string, args ...string) (identity *back
 			ok = false
 			return
 		}
-		id := backend.Identity(UserIdentity{user})
+		// FIXME
+		id := backend.Identity(UserIdentity{user, map[string]bool{user: true}})
 		identity = &id
 		ok = true
 		return

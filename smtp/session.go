@@ -81,6 +81,13 @@ func (c *Session) validateRecipient(to string) bool {
 }
 
 func (c *Session) validateSender(from string) bool {
+	// FIXME better policy for this?
+	if c.server.PolicySet.RequireAuthentication {
+		if c.identity == nil {
+			return false
+		}
+		return (*c.identity).IsValidSender(from)
+	}
 	return true
 }
 

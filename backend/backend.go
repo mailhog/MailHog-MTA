@@ -9,6 +9,7 @@ import (
 // Identity represents an identity
 type Identity interface {
 	String() string
+	IsValidSender(string) bool
 }
 
 // Service represents a service implementation
