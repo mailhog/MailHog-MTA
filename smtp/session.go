@@ -7,9 +7,9 @@ import (
 	"log"
 	"strings"
 
-	"github.com/ian-kent/Go-MailHog/MailHog-MTA/backend"
-	"github.com/ian-kent/Go-MailHog/data"
-	"github.com/ian-kent/Go-MailHog/smtp/protocol"
+	"github.com/mailhog/MailHog-MTA/backend"
+	"github.com/mailhog/data"
+	"github.com/mailhog/smtp"
 )
 
 // Session represents a SMTP session using net.TCPConn
@@ -17,7 +17,7 @@ type Session struct {
 	server *Server
 
 	conn          io.ReadWriteCloser
-	proto         *protocol.Protocol
+	proto         *smtp.Protocol
 	remoteAddress string
 	isTLS         bool
 	line          string
@@ -26,7 +26,7 @@ type Session struct {
 
 // Accept starts a new SMTP session using io.ReadWriteCloser
 func (s *Server) Accept(remoteAddress string, conn io.ReadWriteCloser) {
-	proto := protocol.NewProtocol()
+	proto := smtp.NewProtocol()
 	proto.Hostname = s.Hostname
 
 	session := &Session{
@@ -57,13 +57,13 @@ func (s *Server) Accept(remoteAddress string, conn io.ReadWriteCloser) {
 	session.logf("Session ended")
 }
 
-func (c *Session) validateAuthentication(mechanism string, args ...string) (errorReply *protocol.Reply, ok bool) {
+func (c *Session) validateAuthentication(mechanism string, args ...string) (errorReply *smtp.Reply, ok bool) {
 	if c.server.AuthBackend == nil {
-		return protocol.ReplyInvalidAuth(), false
+		return smtp.ReplyInvalidAuth(), false
 	}
 	i, e, ok := c.server.AuthBackend.Authenticate(mechanism, args...)
 	if e != nil || !ok {
-		return protocol.ReplyInvalidAuth(), false
+		return smtp.ReplyInvalidAuth(), false
 	}
 	c.identity = i
 	return nil, true
@@ -91,15 +91,15 @@ func (c *Session) validateSender(from string) bool {
 	return true
 }
 
-func (c *Session) verbFilter(verb string, args ...string) (errorReply *protocol.Reply) {
-	if c.server.PolicySet.RequireAuthentication && c.proto.State == protocol.MAIL && c.identity == nil {
+func (c *Session) verbFilter(verb string, args ...string) (errorReply *smtp.Reply) {
+	if c.server.PolicySet.RequireAuthentication && c.proto.State == smtp.MAIL && c.identity == nil {
 		verb = strings.ToUpper(verb)
 		if verb == "RSET" || verb == "QUIT" || verb == "NOOP" ||
 			verb == "EHLO" || verb == "HELO" || verb == "AUTH" {
 			return nil
 		}
 		// FIXME more appropriate error
-		return protocol.ReplyUnrecognisedCommand()
+		return smtp.ReplyUnrecognisedCommand()
 	}
 	return nil
 }
@@ -157,7 +157,7 @@ func (c *Session) Read() bool {
 }
 
 // Write writes a reply to the underlying net.TCPConn
-func (c *Session) Write(reply *protocol.Reply) {
+func (c *Session) Write(reply *smtp.Reply) {
 	lines := reply.Lines()
 	for _, l := range lines {
 		logText := strings.Replace(l, "\n", "\\n", -1)

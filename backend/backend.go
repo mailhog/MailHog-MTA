@@ -1,9 +1,9 @@
 package backend
 
 import (
-	"github.com/ian-kent/Go-MailHog/MailHog-MTA/config"
-	"github.com/ian-kent/Go-MailHog/data"
-	"github.com/ian-kent/Go-MailHog/smtp/protocol"
+	"github.com/mailhog/MailHog-MTA/config"
+	"github.com/mailhog/data"
+	"github.com/mailhog/smtp"
 )
 
 // Identity represents an identity
@@ -27,7 +27,7 @@ type Service interface {
 // AuthService represents an authentication service implementation
 type AuthService interface {
 	Service
-	Authenticate(mechanism string, args ...string) (identity *Identity, errorReply *protocol.Reply, ok bool)
+	Authenticate(mechanism string, args ...string) (identity *Identity, errorReply *smtp.Reply, ok bool)
 	Mechanisms() []string
 }
 

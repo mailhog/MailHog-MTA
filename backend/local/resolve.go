@@ -1,8 +1,8 @@
 package local
 
 import (
-	"github.com/ian-kent/Go-MailHog/MailHog-MTA/backend"
-	"github.com/ian-kent/Go-MailHog/data"
+	"github.com/mailhog/MailHog-MTA/backend"
+	"github.com/mailhog/data"
 )
 
 // Resolve implements ResolverService.Resolve

@@ -5,8 +5,8 @@ import (
 	"log"
 
 	"code.google.com/p/go.crypto/bcrypt"
-	"github.com/ian-kent/Go-MailHog/MailHog-MTA/backend"
-	"github.com/ian-kent/Go-MailHog/smtp/protocol"
+	"github.com/mailhog/MailHog-MTA/backend"
+	"github.com/mailhog/smtp"
 )
 
 var mechanisms = []string{"PLAIN"}
@@ -28,12 +28,12 @@ func (u UserIdentity) IsValidSender(sender string) bool {
 // TODO abstract away password mechanism and identity retrieval
 
 // Authenticate implements AuthService.Authenticate
-func (l *Backend) Authenticate(mechanism string, args ...string) (identity *backend.Identity, errorReply *protocol.Reply, ok bool) {
+func (l *Backend) Authenticate(mechanism string, args ...string) (identity *backend.Identity, errorReply *smtp.Reply, ok bool) {
 	log.Println(mechanism)
 	log.Println(args)
 
 	if len(args) < 2 {
-		errorReply = protocol.ReplyError(errors.New("Missing arguments"))
+		errorReply = smtp.ReplyError(errors.New("Missing arguments"))
 		ok = false
 		return
 	}
@@ -45,7 +45,7 @@ func (l *Backend) Authenticate(mechanism string, args ...string) (identity *back
 
 		if err != nil {
 			// FIXME
-			errorReply = protocol.ReplyError(errors.New("Invalid password"))
+			errorReply = smtp.ReplyError(errors.New("Invalid password"))
 			ok = false
 			return
 		}
@@ -57,7 +57,7 @@ func (l *Backend) Authenticate(mechanism string, args ...string) (identity *back
 	}
 
 	// FIXME
-	errorReply = protocol.ReplyError(errors.New("User not found"))
+	errorReply = smtp.ReplyError(errors.New("User not found"))
 	ok = false
 	return
 }

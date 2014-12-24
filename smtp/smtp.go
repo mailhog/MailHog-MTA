@@ -5,8 +5,8 @@ import (
 	"log"
 	"net"
 
-	"github.com/ian-kent/Go-MailHog/MailHog-MTA/backend"
-	"github.com/ian-kent/Go-MailHog/MailHog-MTA/config"
+	"github.com/mailhog/MailHog-MTA/backend"
+	"github.com/mailhog/MailHog-MTA/config"
 )
 
 // Server represents an SMTP server instance

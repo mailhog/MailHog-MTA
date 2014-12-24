@@ -2,8 +2,8 @@ package local
 
 import (
 	"code.google.com/p/go.crypto/bcrypt"
-	"github.com/ian-kent/Go-MailHog/MailHog-MTA/backend"
-	"github.com/ian-kent/Go-MailHog/MailHog-MTA/config"
+	"github.com/mailhog/MailHog-MTA/backend"
+	"github.com/mailhog/MailHog-MTA/config"
 )
 
 // Backend implements local disk storage for all backend services

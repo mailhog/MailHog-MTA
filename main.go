@@ -5,9 +5,9 @@ import (
 	"log"
 	"sync"
 
-	"github.com/ian-kent/Go-MailHog/MailHog-MTA/backend/local"
-	"github.com/ian-kent/Go-MailHog/MailHog-MTA/config"
-	"github.com/ian-kent/Go-MailHog/MailHog-MTA/smtp"
+	"github.com/mailhog/MailHog-MTA/backend/local"
+	"github.com/mailhog/MailHog-MTA/config"
+	"github.com/mailhog/MailHog-MTA/smtp"
 )
 
 var conf *config.Config
