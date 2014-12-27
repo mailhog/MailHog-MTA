@@ -3,8 +3,10 @@ package smtp
 // http://www.rfc-editor.org/rfc/rfc5321.txt
 
 import (
+	"crypto/tls"
 	"io"
 	"log"
+	"net"
 	"strings"
 
 	"github.com/mailhog/MailHog-MTA/backend"
@@ -22,6 +24,22 @@ type Session struct {
 	isTLS         bool
 	line          string
 	identity      *backend.Identity
+}
+
+var tlscfg *tls.Config
+
+func getTLSConfig() *tls.Config {
+	if tlscfg != nil {
+		return tlscfg
+	}
+	cert, err := tls.LoadX509KeyPair("cert.pem", "key.pem")
+	if err != nil {
+		log.Fatal(err)
+	}
+	tlscfg = &tls.Config{
+		Certificates: []tls.Certificate{cert},
+	}
+	return tlscfg
 }
 
 // Accept starts a new SMTP session using io.ReadWriteCloser
@@ -49,6 +67,7 @@ func (s *Server) Accept(remoteAddress string, conn io.ReadWriteCloser) {
 		proto.GetAuthenticationMechanismsHandler = session.server.AuthBackend.Mechanisms
 	}
 	proto.SMTPVerbFilter = session.verbFilter
+	proto.TLSHandler = session.tlsHandler
 
 	session.logf("Starting session")
 	session.Write(proto.Start())
@@ -102,6 +121,20 @@ func (c *Session) verbFilter(verb string, args ...string) (errorReply *smtp.Repl
 		return smtp.ReplyUnrecognisedCommand()
 	}
 	return nil
+}
+
+// tlsHandler handles the STARTTLS command
+// However - Go doesn't currently support SSLv2:
+// https://github.com/golang/go/issues/3930
+// So many newer clients won't work with our STARTTLS anyway
+func (c *Session) tlsHandler(done func(ok bool)) (errorReply *smtp.Reply, callback func(), ok bool) {
+	return nil, func() {
+		c.logf("Upgrading session to TLS")
+		c.conn = tls.Server(c.conn.(net.Conn), getTLSConfig())
+		c.isTLS = true
+		c.logf("Session upgrade complete")
+		done(true)
+	}, true
 }
 
 func (c *Session) acceptMessage(msg *data.Message) (id string, err error) {
@@ -164,5 +197,8 @@ func (c *Session) Write(reply *smtp.Reply) {
 		logText = strings.Replace(logText, "\r", "\\r", -1)
 		c.logf("Sent %d bytes: '%s'", len(l), logText)
 		io.Writer(c.conn).Write([]byte(l))
+	}
+	if reply.Done != nil {
+		reply.Done()
 	}
 }
