@@ -70,6 +70,7 @@ func (s *Server) Accept(remoteAddress string, conn io.ReadWriteCloser) {
 	proto.TLSHandler = session.tlsHandler
 	proto.RequireTLS = session.server.PolicySet.RequireTLS
 	proto.MaximumRecipients = session.server.PolicySet.MaximumRecipients
+	proto.MaximumLineLength = session.server.PolicySet.MaximumLineLength
 
 	session.logf("Starting session")
 	session.Write(proto.Start())

@@ -32,6 +32,7 @@ type PolicySet struct {
 	RequireLocalDelivery  bool
 	MaximumRecipients     int
 	RequireTLS            bool
+	MaximumLineLength     int
 }
 
 func DefaultSubmissionPolicySet() PolicySet {
@@ -40,6 +41,7 @@ func DefaultSubmissionPolicySet() PolicySet {
 		RequireLocalDelivery:  false,
 		MaximumRecipients:     500,
 		RequireTLS:            true,
+		MaximumLineLength:     1024000,
 	}
 }
 
@@ -49,6 +51,7 @@ func DefaultSMTPPolicySet() PolicySet {
 		RequireLocalDelivery:  true,
 		MaximumRecipients:     500,
 		RequireTLS:            false,
+		MaximumLineLength:     1024000,
 	}
 }
 
