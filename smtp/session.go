@@ -69,6 +69,7 @@ func (s *Server) Accept(remoteAddress string, conn io.ReadWriteCloser) {
 	proto.SMTPVerbFilter = session.verbFilter
 	proto.TLSHandler = session.tlsHandler
 	proto.RequireTLS = session.server.PolicySet.RequireTLS
+	proto.MaximumRecipients = session.server.PolicySet.MaximumRecipients
 
 	session.logf("Starting session")
 	session.Write(proto.Start())
@@ -118,6 +119,7 @@ func (c *Session) validateSender(from string) bool {
 }
 
 func (c *Session) verbFilter(verb string, args ...string) (errorReply *smtp.Reply) {
+	// FIXME consider moving this to smtp proto? since STARTTLS is there anyway...
 	if c.server.PolicySet.RequireAuthentication && c.proto.State == smtp.MAIL && c.identity == nil {
 		verb = strings.ToUpper(verb)
 		if verb == "RSET" || verb == "QUIT" || verb == "NOOP" ||

@@ -4,14 +4,16 @@ import (
 	"code.google.com/p/go.crypto/bcrypt"
 	"github.com/mailhog/MailHog-MTA/backend"
 	"github.com/mailhog/MailHog-MTA/config"
+	"github.com/mailhog/data"
 )
 
 // Backend implements local disk storage for all backend services
 type Backend struct {
-	authMap    map[string]*BackendUser
-	resolveMap map[string]map[string]backend.ResolvedState
-	config     *config.Config
-	server     *config.Server
+	authMap       map[string]*BackendUser
+	resolveMap    map[string]map[string]backend.ResolvedState
+	deliveryQueue []*data.Message
+	config        *config.Config
+	server        *config.Server
 }
 
 type BackendUser struct {

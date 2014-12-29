@@ -15,12 +15,13 @@ func (l *Backend) Deliver(msg *data.Message) (id string, err error) {
 	}
 	id = string(mid)
 
+	l.deliveryQueue = append(l.deliveryQueue, msg)
+
 	return
 }
 
 // WillDeliver implements DeliveryService.WillDeliver
 func (l *Backend) WillDeliver(from, to string, as *backend.Identity) bool {
-
 	return true
 }
 
