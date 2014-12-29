@@ -170,7 +170,7 @@ func (c *Session) Read() bool {
 
 	c.line += text
 
-	for strings.Contains(c.line, "\n") {
+	for strings.Contains(c.line, "\r\n") {
 		line, reply := c.proto.Parse(c.line)
 		c.line = line
 
