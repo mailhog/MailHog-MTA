@@ -4,6 +4,7 @@ package smtp
 
 import (
 	"crypto/tls"
+	"fmt"
 	"io"
 	"log"
 	"net"
@@ -24,6 +25,8 @@ type Session struct {
 	isTLS         bool
 	line          string
 	identity      *backend.Identity
+
+	maximumBufferLength int
 }
 
 // Accept starts a new SMTP session using io.ReadWriteCloser
@@ -32,13 +35,14 @@ func (s *Server) Accept(remoteAddress string, conn io.ReadWriteCloser) {
 	proto.Hostname = s.Hostname
 
 	session := &Session{
-		server:        s,
-		conn:          conn,
-		proto:         proto,
-		remoteAddress: remoteAddress,
-		isTLS:         false,
-		line:          "",
-		identity:      nil,
+		server:              s,
+		conn:                conn,
+		proto:               proto,
+		remoteAddress:       remoteAddress,
+		isTLS:               false,
+		line:                "",
+		identity:            nil,
+		maximumBufferLength: 2048000,
 	}
 
 	// FIXME this all feels nasty
@@ -162,6 +166,13 @@ func (c *Session) Read() bool {
 	logText := strings.Replace(text, "\n", "\\n", -1)
 	logText = strings.Replace(logText, "\r", "\\r", -1)
 	c.logf("Received %d bytes: '%s'\n", n, logText)
+
+	if c.maximumBufferLength > -1 && len(c.line+text) > c.maximumBufferLength {
+		// FIXME what is the "expected" behaviour for this?
+		c.Write(smtp.ReplyError(fmt.Errorf("Maximum buffer length exceeded")))
+		io.Closer(c.conn).Close()
+		return false
+	}
 
 	c.line += text
 
