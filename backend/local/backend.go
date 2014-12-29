@@ -22,6 +22,9 @@ type BackendUser struct {
 
 // Configure implements Service.Configure
 func (l *Backend) Configure(config *config.Config, server *config.Server) error {
+	l.server = server
+	l.config = config
+
 	c, _ := bcrypt.GenerateFromPassword([]byte("test"), 11)
 	l.authMap = map[string]*BackendUser{
 		"test@mailhog.example": &BackendUser{

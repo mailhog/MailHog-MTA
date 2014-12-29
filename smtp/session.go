@@ -124,9 +124,6 @@ func (c *Session) verbFilter(verb string, args ...string) (errorReply *smtp.Repl
 }
 
 // tlsHandler handles the STARTTLS command
-// However - Go doesn't currently support SSLv2:
-// https://github.com/golang/go/issues/3930
-// So many newer clients won't work with our STARTTLS anyway
 func (c *Session) tlsHandler(done func(ok bool)) (errorReply *smtp.Reply, callback func(), ok bool) {
 	return nil, func() {
 		c.logf("Upgrading session to TLS")
