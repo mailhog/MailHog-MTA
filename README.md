@@ -3,11 +3,28 @@ MailHog MTA [![GoDoc](https://godoc.org/github.com/mailhog/MailHog-MTA?status.sv
 
 A experimental distributed mail transfer agent (MTA) based on MailHog.
 
+Documentation is incomplete and its barely configurable.
+
+Current features:
+
+- Multiple server support, e.g.
+  - SMTP (25)
+  - Submission (587)
+- SMTP support:
+  - ESMTP
+  - PIPELINING
+  - AUTH PLAIN
+  - STARTTLS
+- Server policies:
+  - Require TLS
+  - Require authentication
+  - Require local delivery
+  - Maximum recipients
+  - Maximum connections
+
 ### Contributing
 
 Clone this repository to ```$GOPATH/src/github.com/mailhog/MailHog-MTA``` and type ```make deps```.
-
-See the [Building MailHog](BUILD.md) guide.
 
 Requires Go 1.2+ to build.
 
