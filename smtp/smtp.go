@@ -1,6 +1,7 @@
 package smtp
 
 import (
+	"crypto/tls"
 	"io"
 	"log"
 	"net"
@@ -18,6 +19,22 @@ type Server struct {
 	AuthBackend     backend.AuthService
 	DeliveryBackend backend.DeliveryService
 	ResolverBackend backend.ResolverService
+
+	tlsConfig *tls.Config
+}
+
+func (s *Server) getTLSConfig() *tls.Config {
+	if s.tlsConfig != nil {
+		return s.tlsConfig
+	}
+	cert, err := tls.LoadX509KeyPair("cert.pem", "key.pem")
+	if err != nil {
+		log.Fatal(err)
+	}
+	s.tlsConfig = &tls.Config{
+		Certificates: []tls.Certificate{cert},
+	}
+	return s.tlsConfig
 }
 
 // Listen starts listening on the configured bind address

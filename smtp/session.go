@@ -26,22 +26,6 @@ type Session struct {
 	identity      *backend.Identity
 }
 
-var tlscfg *tls.Config
-
-func getTLSConfig() *tls.Config {
-	if tlscfg != nil {
-		return tlscfg
-	}
-	cert, err := tls.LoadX509KeyPair("cert.pem", "key.pem")
-	if err != nil {
-		log.Fatal(err)
-	}
-	tlscfg = &tls.Config{
-		Certificates: []tls.Certificate{cert},
-	}
-	return tlscfg
-}
-
 // Accept starts a new SMTP session using io.ReadWriteCloser
 func (s *Server) Accept(remoteAddress string, conn io.ReadWriteCloser) {
 	proto := smtp.NewProtocol()
@@ -67,10 +51,13 @@ func (s *Server) Accept(remoteAddress string, conn io.ReadWriteCloser) {
 		proto.GetAuthenticationMechanismsHandler = session.server.AuthBackend.Mechanisms
 	}
 	proto.SMTPVerbFilter = session.verbFilter
-	proto.TLSHandler = session.tlsHandler
-	proto.RequireTLS = session.server.PolicySet.RequireTLS
 	proto.MaximumRecipients = session.server.PolicySet.MaximumRecipients
 	proto.MaximumLineLength = session.server.PolicySet.MaximumLineLength
+
+	if session.server.PolicySet.EnableTLS {
+		proto.TLSHandler = session.tlsHandler
+		proto.RequireTLS = session.server.PolicySet.RequireTLS
+	}
 
 	session.logf("Starting session")
 	session.Write(proto.Start())
@@ -137,7 +124,7 @@ func (c *Session) verbFilter(verb string, args ...string) (errorReply *smtp.Repl
 func (c *Session) tlsHandler(done func(ok bool)) (errorReply *smtp.Reply, callback func(), ok bool) {
 	return nil, func() {
 		c.logf("Upgrading session to TLS")
-		c.conn = tls.Server(c.conn.(net.Conn), getTLSConfig())
+		c.conn = tls.Server(c.conn.(net.Conn), c.server.getTLSConfig())
 		c.isTLS = true
 		c.logf("Session upgrade complete")
 		done(true)
@@ -155,7 +142,7 @@ func (c *Session) logf(message string, args ...interface{}) {
 	log.Printf(message, args...)
 }
 
-// Read reads from the underlying net.TCPConn
+// Read reads from the underlying io.Reader
 func (c *Session) Read() bool {
 	buf := make([]byte, 1024)
 	n, err := io.Reader(c.conn).Read(buf)
@@ -194,7 +181,7 @@ func (c *Session) Read() bool {
 	return true
 }
 
-// Write writes a reply to the underlying net.TCPConn
+// Write writes a reply to the underlying io.Writer
 func (c *Session) Write(reply *smtp.Reply) {
 	lines := reply.Lines()
 	for _, l := range lines {
