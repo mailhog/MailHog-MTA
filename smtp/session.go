@@ -117,6 +117,14 @@ func (c *Session) validateSender(from string) bool {
 }
 
 func (c *Session) verbFilter(verb string, args ...string) (errorReply *smtp.Reply) {
+	if c.server.PolicySet.RequireTLS && !c.isTLS {
+		verb = strings.ToUpper(verb)
+		if verb == "RSET" || verb == "QUIT" || verb == "NOOP" ||
+			verb == "EHLO" || verb == "HELO" || verb == "STARTTLS" {
+			return nil
+		}
+		return smtp.ReplyMustIssueSTARTTLSFirst()
+	}
 	if c.server.PolicySet.RequireAuthentication && c.proto.State == smtp.MAIL && c.identity == nil {
 		verb = strings.ToUpper(verb)
 		if verb == "RSET" || verb == "QUIT" || verb == "NOOP" ||
@@ -142,9 +150,7 @@ func (c *Session) tlsHandler(done func(ok bool)) (errorReply *smtp.Reply, callba
 
 func (c *Session) acceptMessage(msg *data.Message) (id string, err error) {
 	c.logf("Storing message %s", msg.ID)
-	//id, err = c.storage.Store(msg)
-	//c.messageChan <- msg
-	return
+	return c.server.DeliveryBackend.Deliver(msg)
 }
 
 func (c *Session) logf(message string, args ...interface{}) {

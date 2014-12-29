@@ -31,6 +31,7 @@ type PolicySet struct {
 	RequireAuthentication bool
 	RequireLocalDelivery  bool
 	MaximumRecipients     int
+	RequireTLS            bool
 }
 
 func DefaultSubmissionPolicySet() PolicySet {
@@ -38,6 +39,7 @@ func DefaultSubmissionPolicySet() PolicySet {
 		RequireAuthentication: true,
 		RequireLocalDelivery:  false,
 		MaximumRecipients:     500,
+		RequireTLS:            true,
 	}
 }
 
@@ -46,6 +48,7 @@ func DefaultSMTPPolicySet() PolicySet {
 		RequireAuthentication: false,
 		RequireLocalDelivery:  true,
 		MaximumRecipients:     500,
+		RequireTLS:            false,
 	}
 }
 
