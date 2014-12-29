@@ -47,6 +47,7 @@ func newServer(cfg *config.Config, server *config.Server) error {
 		PolicySet:       server.PolicySet,
 		AuthBackend:     localBackend,
 		DeliveryBackend: localBackend,
+		ResolverBackend: localBackend,
 	}
 
 	return s.Listen()

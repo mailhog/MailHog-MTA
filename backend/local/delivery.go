@@ -7,11 +7,20 @@ import (
 
 // Deliver implements DeliveryService.Deliver
 func (l *Backend) Deliver(msg *data.Message) (id string, err error) {
+	var mid data.MessageID
+
+	mid, err = data.NewMessageID("mailhog.example")
+	if err != nil {
+		return
+	}
+	id = string(mid)
+
 	return
 }
 
 // WillDeliver implements DeliveryService.WillDeliver
 func (l *Backend) WillDeliver(from, to string, as *backend.Identity) bool {
+
 	return true
 }
 

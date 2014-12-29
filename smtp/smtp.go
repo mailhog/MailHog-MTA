@@ -17,6 +17,7 @@ type Server struct {
 
 	AuthBackend     backend.AuthService
 	DeliveryBackend backend.DeliveryService
+	ResolverBackend backend.ResolverService
 }
 
 // Listen starts listening on the configured bind address

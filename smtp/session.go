@@ -96,6 +96,12 @@ func (c *Session) validateRecipient(to string) bool {
 	if maxRecipients > -1 && len(c.proto.Message.To) > maxRecipients {
 		return false
 	}
+	if c.server.PolicySet.RequireLocalDelivery {
+		r := c.server.ResolverBackend.Resolve(to)
+		if r != backend.ResolvedPrimaryLocal && r != backend.ResolvedSecondaryLocal {
+			return false
+		}
+	}
 	return c.server.DeliveryBackend.WillDeliver(to, c.proto.Message.From, c.identity)
 }
 

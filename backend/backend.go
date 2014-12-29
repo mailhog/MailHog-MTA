@@ -46,7 +46,7 @@ type DeliveryService interface {
 // FIXME it might be clearer to use that terminology?
 type ResolverService interface {
 	Service
-	Resolve(address string) (ResolvedState, error)
+	Resolve(address string) ResolvedState
 }
 
 // ResolvedState represents the resolved state of an address
