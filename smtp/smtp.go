@@ -48,17 +48,24 @@ func (s *Server) Listen() error {
 
 	defer ln.Close()
 
+	sem := make(chan int, s.PolicySet.MaximumConnections)
+
 	for {
+		sem <- 1
+
 		conn, err := ln.Accept()
 		if err != nil {
 			log.Printf("[SMTP] Error accepting connection: %s\n", err)
 			continue
 		}
-		defer conn.Close()
 
-		go s.Accept(
-			conn.(*net.TCPConn).RemoteAddr().String(),
-			io.ReadWriteCloser(conn),
-		)
+		go func() {
+			s.Accept(
+				conn.(*net.TCPConn).RemoteAddr().String(),
+				io.ReadWriteCloser(conn),
+			)
+
+			<-sem
+		}()
 	}
 }

@@ -67,6 +67,7 @@ func (s *Server) Accept(remoteAddress string, conn io.ReadWriteCloser) {
 	session.Write(proto.Start())
 	for session.Read() == true {
 	}
+	io.Closer(conn).Close()
 	session.logf("Session ended")
 }
 
@@ -170,7 +171,6 @@ func (c *Session) Read() bool {
 	if c.maximumBufferLength > -1 && len(c.line+text) > c.maximumBufferLength {
 		// FIXME what is the "expected" behaviour for this?
 		c.Write(smtp.ReplyError(fmt.Errorf("Maximum buffer length exceeded")))
-		io.Closer(c.conn).Close()
 		return false
 	}
 
@@ -183,7 +183,6 @@ func (c *Session) Read() bool {
 		if reply != nil {
 			c.Write(reply)
 			if reply.Status == 221 {
-				io.Closer(c.conn).Close()
 				return false
 			}
 		}

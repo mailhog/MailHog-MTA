@@ -34,6 +34,7 @@ type PolicySet struct {
 	EnableTLS             bool
 	RequireTLS            bool
 	MaximumLineLength     int
+	MaximumConnections    int
 }
 
 func DefaultSubmissionPolicySet() PolicySet {
@@ -44,6 +45,7 @@ func DefaultSubmissionPolicySet() PolicySet {
 		RequireTLS:            true,
 		EnableTLS:             true,
 		MaximumLineLength:     1024000,
+		MaximumConnections:    1000,
 	}
 }
 
@@ -55,6 +57,7 @@ func DefaultSMTPPolicySet() PolicySet {
 		RequireTLS:            false,
 		EnableTLS:             true,
 		MaximumLineLength:     1024000,
+		MaximumConnections:    1000,
 	}
 }
 
