@@ -2,7 +2,6 @@ package resolver
 
 import (
 	"github.com/mailhog/MailHog-MTA/backend"
-	"github.com/mailhog/MailHog-MTA/config"
 	"github.com/mailhog/data"
 )
 
@@ -17,11 +16,6 @@ func NewLocalResolver(m map[string]map[string]ResolvedState) *LocalResolver {
 	return &LocalResolver{
 		resolveMap: m,
 	}
-}
-
-// Configure implements backend.Service.Configure
-func (l *LocalResolver) Configure(config *config.Config, server *config.Server) error {
-	return l.DefaultBackend.Configure(config, server)
 }
 
 // Resolve implements ResolverService.Resolve

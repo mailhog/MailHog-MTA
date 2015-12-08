@@ -2,7 +2,6 @@ package delivery
 
 import (
 	"github.com/mailhog/MailHog-MTA/backend"
-	"github.com/mailhog/MailHog-MTA/config"
 	"github.com/mailhog/data"
 )
 
@@ -10,11 +9,6 @@ import (
 type LocalDelivery struct {
 	backend.DefaultBackend
 	deliveryQueue []*data.Message
-}
-
-// Configure implements backend.Service.Configure
-func (l *LocalDelivery) Configure(config *config.Config, server *config.Server) error {
-	return l.DefaultBackend.Configure(config, server)
 }
 
 // Deliver implements DeliveryService.Deliver

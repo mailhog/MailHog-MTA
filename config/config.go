@@ -145,29 +145,29 @@ func DefaultSMTPPolicySet() PolicySet {
 
 var cfg = DefaultConfig()
 
-var configPath string
+var configFile string
 
 // Configure returns the configuration
 func Configure() *Config {
-	if len(configPath) > 0 {
-		b, err := ioutil.ReadFile(configPath)
+	if len(configFile) > 0 {
+		b, err := ioutil.ReadFile(configFile)
 		if err != nil {
-			fmt.Printf("Error reading %s: %s", configPath, err)
+			fmt.Printf("Error reading %s: %s", configFile, err)
 			os.Exit(1)
 		}
 		switch {
-		case strings.HasSuffix(configPath, ".json"):
+		case strings.HasSuffix(configFile, ".json"):
 			err = json.Unmarshal(b, &cfg)
 			if err != nil {
-				fmt.Printf("Error parsing JSON in %s: %s", configPath, err)
+				fmt.Printf("Error parsing JSON in %s: %s", configFile, err)
 				os.Exit(3)
 			}
 		default:
-			fmt.Printf("Unsupported file type: %s\n", configPath)
+			fmt.Printf("Unsupported file type: %s\n", configFile)
 			os.Exit(2)
 		}
 
-		cfg.relPath = filepath.Dir(configPath)
+		cfg.relPath = filepath.Dir(configFile)
 	}
 
 	return cfg
@@ -175,5 +175,5 @@ func Configure() *Config {
 
 // RegisterFlags registers command line options
 func RegisterFlags() {
-	flag.StringVar(&configPath, "config-path", "", "Path to configuration file")
+	flag.StringVar(&configFile, "config-file", "", "Path to configuration file")
 }

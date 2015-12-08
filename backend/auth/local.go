@@ -6,7 +6,6 @@ import (
 
 	"code.google.com/p/go.crypto/bcrypt"
 	"github.com/mailhog/MailHog-MTA/backend"
-	"github.com/mailhog/MailHog-MTA/config"
 	"github.com/mailhog/smtp"
 )
 
@@ -23,11 +22,6 @@ func NewLocalAuth(m map[string]*LocalUser) *LocalAuth {
 	return &LocalAuth{
 		authMap: m,
 	}
-}
-
-// Configure implements backend.Service.Configure
-func (l *LocalAuth) Configure(config *config.Config, server *config.Server) error {
-	return l.DefaultBackend.Configure(config, server)
 }
 
 // LocalUser represents a virtual user
