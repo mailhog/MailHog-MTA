@@ -1,10 +1,6 @@
 package backend
 
-import (
-	"github.com/mailhog/MailHog-MTA/config"
-	"github.com/mailhog/data"
-	"github.com/mailhog/smtp"
-)
+import "github.com/mailhog/MailHog-MTA/config"
 
 // Identity represents an identity
 type Identity interface {
@@ -24,41 +20,17 @@ type Service interface {
 	Configure(*config.Config, *config.Server) error
 }
 
-// AuthService represents an authentication service implementation
-type AuthService interface {
-	Service
-	Authenticate(mechanism string, args ...string) (identity *Identity, errorReply *smtp.Reply, ok bool)
-	Mechanisms() []string
+var _ Service = &DefaultBackend{}
+
+// DefaultBackend is a default struct to hold the current config and server
+type DefaultBackend struct {
+	Config *config.Config
+	Server *config.Server
 }
 
-// DeliveryService represents a delivery service implementation
-type DeliveryService interface {
-	Service
-	Deliver(msg *data.Message) (id string, err error)
-	WillDeliver(from, to string, as *Identity) bool
-	MaxRecipients(as *Identity) int
+// Configure implements Service.Configure
+func (l *DefaultBackend) Configure(config *config.Config, server *config.Server) error {
+	l.Server = server
+	l.Config = config
+	return nil
 }
-
-// ResolverService represents an address resolver implementation
-// FIXME what this all actually means is "will you accept messages for this address"
-// FIXME and the only responses are: yes, no
-// FIXME if yes, the reasons can be: i own the mailbox, i can deliver to the mailbox, i'll relay mail for you
-// FIXME it might be clearer to use that terminology?
-type ResolverService interface {
-	Service
-	Resolve(address string) ResolvedState
-}
-
-// ResolvedState represents the resolved state of an address
-type ResolvedState uint8
-
-const (
-	// ResolvedNotFound is returned for non-existant mailboxes at local domains
-	ResolvedNotFound = ResolvedState(iota)
-	// ResolvedPrimaryLocal is returned for mailboxes at local primary domains
-	ResolvedPrimaryLocal
-	// ResolvedSecondaryLocal is returned for mailboxes at local secondary domains
-	ResolvedSecondaryLocal
-	// ResolvedRemote is returned for mailboxes at unrecognised domains
-	ResolvedRemote
-)

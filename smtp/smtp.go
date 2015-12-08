@@ -6,7 +6,9 @@ import (
 	"log"
 	"net"
 
-	"github.com/mailhog/MailHog-MTA/backend"
+	"github.com/mailhog/MailHog-MTA/backend/auth"
+	"github.com/mailhog/MailHog-MTA/backend/delivery"
+	"github.com/mailhog/MailHog-MTA/backend/resolver"
 	"github.com/mailhog/MailHog-MTA/config"
 )
 
@@ -16,18 +18,26 @@ type Server struct {
 	Hostname  string
 	PolicySet config.PolicySet
 
-	AuthBackend     backend.AuthService
-	DeliveryBackend backend.DeliveryService
-	ResolverBackend backend.ResolverService
+	TLSConfig TLSConfig
+
+	AuthBackend     auth.Service
+	DeliveryBackend delivery.Service
+	ResolverBackend resolver.Service
 
 	tlsConfig *tls.Config
+}
+
+// TLSConfig defines the certificate and key files used for TLS
+type TLSConfig struct {
+	CertFile string
+	KeyFile  string
 }
 
 func (s *Server) getTLSConfig() *tls.Config {
 	if s.tlsConfig != nil {
 		return s.tlsConfig
 	}
-	cert, err := tls.LoadX509KeyPair("cert.pem", "key.pem")
+	cert, err := tls.LoadX509KeyPair(s.TLSConfig.CertFile, s.TLSConfig.KeyFile)
 	if err != nil {
 		log.Fatal(err)
 	}

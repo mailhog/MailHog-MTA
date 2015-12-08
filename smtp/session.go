@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/mailhog/MailHog-MTA/backend"
+	"github.com/mailhog/MailHog-MTA/backend/resolver"
 	"github.com/mailhog/data"
 	"github.com/mailhog/smtp"
 )
@@ -92,8 +93,8 @@ func (c *Session) validateRecipient(to string) bool {
 		return false
 	}
 	if c.server.PolicySet.RequireLocalDelivery {
-		r := c.server.ResolverBackend.Resolve(to)
-		if r != backend.ResolvedPrimaryLocal && r != backend.ResolvedSecondaryLocal {
+		r, d := c.server.ResolverBackend.Resolve(to)
+		if d == resolver.DeliveryRejected || r == resolver.ResolvedNotFound {
 			return false
 		}
 	}

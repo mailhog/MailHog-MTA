@@ -5,7 +5,9 @@ import (
 	"log"
 	"sync"
 
-	"github.com/mailhog/MailHog-MTA/backend/local"
+	"github.com/mailhog/MailHog-MTA/backend/auth"
+	"github.com/mailhog/MailHog-MTA/backend/delivery"
+	"github.com/mailhog/MailHog-MTA/backend/resolver"
 	"github.com/mailhog/MailHog-MTA/config"
 	"github.com/mailhog/MailHog-MTA/smtp"
 )
@@ -37,17 +39,13 @@ func main() {
 }
 
 func newServer(cfg *config.Config, server *config.Server) error {
-	// FIXME make configurable
-	localBackend := &local.Backend{}
-	localBackend.Configure(cfg, server)
-
 	s := &smtp.Server{
 		BindAddr:        server.BindAddr,
 		Hostname:        server.Hostname,
 		PolicySet:       server.PolicySet,
-		AuthBackend:     localBackend,
-		DeliveryBackend: localBackend,
-		ResolverBackend: localBackend,
+		AuthBackend:     auth.Load(cfg, server),
+		DeliveryBackend: delivery.Load(cfg, server),
+		ResolverBackend: resolver.Load(cfg, server),
 	}
 
 	return s.Listen()

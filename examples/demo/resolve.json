@@ -1,0 +1,11 @@
+{
+  "mailhog.example": {
+    "test": 0
+  },
+  "mailhog.internal": {
+    "test": 1
+  },
+  "mailhog.remote": {
+    "test": 2
+  }
+}

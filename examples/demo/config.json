@@ -1,0 +1,74 @@
+{
+	"Servers": [{
+		"BindAddr": "0.0.0.0:25",
+		"Hostname": "mailhog.example",
+		"PolicySet": {
+			"RequireAuthentication": false,
+			"RequireLocalDelivery": true,
+			"MaximumRecipients": 500,
+			"EnableTLS": true,
+			"RequireTLS": false,
+			"MaximumLineLength": 1024000,
+			"MaximumConnections": 1000
+		},
+    "TLSConfig": {
+      "CertFile": "cert.pem",
+      "KeyFile": "key.pem"
+    },
+		"Backends": {
+			"Auth": {
+				"Ref": "local_auth"
+			},
+			"Resolver": {
+				"Ref": "local_resolver"
+			},
+			"Delivery": {
+				"Ref": "local_delivery"
+			}
+		}
+	}, {
+		"BindAddr": "0.0.0.0:587",
+		"Hostname": "mailhog.example",
+		"PolicySet": {
+			"RequireAuthentication": true,
+			"RequireLocalDelivery": false,
+			"MaximumRecipients": 500,
+			"EnableTLS": true,
+			"RequireTLS": true,
+			"MaximumLineLength": 1024000,
+			"MaximumConnections": 1000
+		},
+    "TLSConfig": {
+      "CertFile": "cert.pem",
+      "KeyFile": "key.pem"
+    },
+		"Backends": {
+			"Auth": {
+				"Ref": "local_auth"
+			},
+			"Resolver": {
+				"Ref": "local_resolver"
+			},
+			"Delivery": {
+				"Ref": "local_delivery"
+			}
+		}
+	}],
+	"Backends": {
+		"local_auth": {
+			"Type": "local",
+			"Data": {
+				"config": "auth.json"
+			}
+		},
+		"local_delivery": {
+			"Type": "local"
+		},
+		"local_resolver": {
+			"Type": "local",
+			"Data": {
+				"config": "resolve.json"
+			}
+		}
+	}
+}
