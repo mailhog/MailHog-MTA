@@ -19,6 +19,7 @@ type Service interface {
 
 // Load loads a delivery backend
 func Load(cfg *config.Config, server *config.Server) Service {
+	// FIXME delivery backend could be loaded multiple times, should cache this
 	if a := server.Backends.Delivery; a != nil {
 		if len(a.Ref) > 0 {
 			if a2, ok := cfg.Backends[a.Ref]; ok {

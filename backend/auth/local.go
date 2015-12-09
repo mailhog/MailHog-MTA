@@ -14,7 +14,7 @@ import (
 	"github.com/mailhog/smtp"
 )
 
-var mechanisms = []string{"PLAIN"}
+var localMechanisms = []string{"PLAIN"}
 
 // LocalAuth implements auth.Service
 type LocalAuth struct {
@@ -108,5 +108,5 @@ func (l *LocalAuth) Authenticate(mechanism string, args ...string) (identity Ide
 
 // Mechanisms implements AuthService.Mechanisms
 func (l *LocalAuth) Mechanisms() []string {
-	return mechanisms
+	return localMechanisms
 }

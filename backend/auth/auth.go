@@ -23,6 +23,7 @@ type Identity interface {
 
 // Load loads an auth backend
 func Load(cfg *config.Config, server *config.Server) Service {
+	// FIXME auth backend could be loaded multiple times, should cache this
 	if a := server.Backends.Auth; a != nil {
 		if len(a.Ref) > 0 {
 			if a2, ok := cfg.Backends[a.Ref]; ok {

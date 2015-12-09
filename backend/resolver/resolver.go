@@ -43,6 +43,7 @@ const (
 
 // Load loads a resolver backend
 func Load(cfg *config.Config, server *config.Server) Service {
+	// FIXME resolver backend could be loaded multiple times, should cache this
 	if a := server.Backends.Resolver; a != nil {
 		if len(a.Ref) > 0 {
 			if a2, ok := cfg.Backends[a.Ref]; ok {
