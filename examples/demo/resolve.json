@@ -1,11 +1,16 @@
 {
   "mailhog.example": {
-    "test": 0
+    "name": "mailhog.example",
+    "state": 1,
+    "mailboxes": {
+      "test": {
+        "name": "test",
+        "state": 2
+      }
+    }
   },
   "mailhog.internal": {
-    "test": 1
-  },
-  "mailhog.remote": {
-    "test": 2
+    "name": "mailhog.internal",
+    "state": 2
   }
 }

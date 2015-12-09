@@ -62,7 +62,10 @@
 			}
 		},
 		"local_delivery": {
-			"Type": "local"
+			"Type": "local",
+      "Data": {
+        "spool_path": "spool"
+      }
 		},
 		"local_resolver": {
 			"Type": "local",

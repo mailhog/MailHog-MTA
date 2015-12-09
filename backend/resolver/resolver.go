@@ -14,31 +14,41 @@ import (
 // FIXME if yes, the reasons can be: i own the mailbox, i can deliver to the mailbox, i'll relay mail for you
 // FIXME it might be clearer to use that terminology?
 type Service interface {
-	Resolve(address string) (ResolvedState, DeliveryState)
+	Resolve(address string) Result
 }
 
-// ResolvedState represents the resolved state of an address
-type ResolvedState uint8
+// Result represents an address resolution result
+type Result struct {
+	Domain  DomainState
+	Mailbox MailboxState
+}
 
-// DeliveryState represents the deliverability of the address
-type DeliveryState uint8
+// DomainState is the result of a domain lookup
+type DomainState uint8
+
+// MailboxState is the result of a mailbox lookup
+type MailboxState uint8
 
 const (
-	// ResolvedNotFound is returned for non-existant mailboxes at local domains
-	ResolvedNotFound = ResolvedState(iota)
-	// ResolvedPrimaryLocal is returned for mailboxes at local primary domains
-	ResolvedPrimaryLocal
-	// ResolvedSecondaryLocal is returned for mailboxes at local secondary domains
-	ResolvedSecondaryLocal
-	// ResolvedRemote is returned for mailboxes at unrecognised domains
-	ResolvedRemote
+	// DomainNotFound is returned for unknown domains.
+	// This includes outbound SMTP to domains not at this host.
+	DomainNotFound = DomainState(iota)
+	// DomainPrimaryLocal is returned for local primary domains, i.e.
+	// - domains this host is responsible for
+	DomainPrimaryLocal
+	// DomainSecondaryLocal is returned for secondary local domains, i.e.
+	// - domains this host is a backup MX for
+	// - domains this host acts as a inter-network router for, including
+	//   private/public mail relaying
+	DomainSecondaryLocal
 
-	// DeliveryRejected is returned if delivery to the mailbox is not possible
-	DeliveryRejected = DeliveryState(iota)
-	// DeliveryDirect is returned if direct delivery to the mailbox is possible
-	DeliveryDirect
-	// DeliveryRelay is returned if relay delivery to the mailbox is possible
-	DeliveryRelay
+	// MailboxLookupSkipped is returned when no local mailbox lookup is performed
+	// e.g. for secondary local domains
+	MailboxLookupSkipped = MailboxState(iota)
+	// MailboxNotFound is returned when a lookup fails to locate a mailbox
+	MailboxNotFound
+	// MailboxFound is returned when a lookup finds a mailbox
+	MailboxFound
 )
 
 // Load loads a resolver backend

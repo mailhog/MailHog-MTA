@@ -97,8 +97,8 @@ func (c *Session) validateRecipient(to string) bool {
 		return false
 	}
 	if c.server.PolicySet.RequireLocalDelivery {
-		r, d := c.server.ResolverBackend.Resolve(to)
-		if d == resolver.DeliveryRejected || r == resolver.ResolvedNotFound {
+		r := c.server.ResolverBackend.Resolve(to)
+		if r.Domain == resolver.DomainNotFound {
 			return false
 		}
 	}
