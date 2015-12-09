@@ -6,7 +6,7 @@
 			"RequireAuthentication": false,
 			"RequireLocalDelivery": true,
 			"MaximumRecipients": 500,
-			"EnableTLS": true,
+			"EnableTLS": false,
 			"RequireTLS": false,
 			"MaximumLineLength": 1024000,
 			"MaximumConnections": 1000

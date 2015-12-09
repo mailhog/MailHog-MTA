@@ -27,6 +27,7 @@ func NewLocalAuth(cfg config.BackendConfig, srvCfg config.Server, appCfg config.
 
 	if c, ok := cfg.Data["config"]; ok {
 		if s, ok := c.(string); ok && len(s) > 0 {
+			log.Printf("loading auth data from: %s", s)
 			if !strings.HasPrefix(s, "/") {
 				s = filepath.Join(appCfg.RelPath(), s)
 			}

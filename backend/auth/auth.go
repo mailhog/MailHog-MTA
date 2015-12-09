@@ -35,7 +35,7 @@ func Load(cfg *config.Config, server *config.Server) Service {
 
 		switch strings.ToLower(a.Type) {
 		case "local":
-			return NewLocalAuth(*server.Backends.Auth, *server, *cfg)
+			return NewLocalAuth(*a, *server, *cfg)
 		default:
 			fmt.Printf("Backend type not recognised\n")
 			os.Exit(1)

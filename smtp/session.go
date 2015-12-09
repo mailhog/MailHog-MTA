@@ -79,6 +79,9 @@ func (c *Session) validateAuthentication(mechanism string, args ...string) (erro
 	}
 	i, e, ok := c.server.AuthBackend.Authenticate(mechanism, args...)
 	if e != nil || !ok {
+		if e != nil {
+			c.logf("error authenticating: %s", e)
+		}
 		return smtp.ReplyInvalidAuth(), false
 	}
 	c.identity = i

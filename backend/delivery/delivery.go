@@ -31,7 +31,7 @@ func Load(cfg *config.Config, server *config.Server) Service {
 
 		switch strings.ToLower(a.Type) {
 		case "local":
-			return NewLocalDelivery(*server.Backends.Delivery, *server, *cfg)
+			return NewLocalDelivery(*a, *server, *cfg)
 		default:
 			fmt.Printf("Backend type not recognised\n")
 			os.Exit(1)
