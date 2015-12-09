@@ -114,7 +114,6 @@ func (c *Session) validateSender(from string) bool {
 }
 
 func (c *Session) verbFilter(verb string, args ...string) (errorReply *smtp.Reply) {
-	// FIXME consider moving this to smtp proto? since STARTTLS is there anyway...
 	if c.server.PolicySet.RequireAuthentication && c.proto.State == smtp.MAIL && c.identity == nil {
 		verb = strings.ToUpper(verb)
 		if verb == "RSET" || verb == "QUIT" || verb == "NOOP" ||
