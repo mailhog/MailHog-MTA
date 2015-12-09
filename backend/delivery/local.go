@@ -54,7 +54,10 @@ func (l *LocalDelivery) Deliver(msg *data.Message) (id string, err error) {
 		dp = filepath.Join(l.app.RelPath(), dp)
 	}
 
-	os.MkdirAll(dp, 0660)
+	err = os.MkdirAll(dp, 0660)
+	if err != nil {
+		return "", err
+	}
 
 	dp = filepath.Join(dp, id)
 
