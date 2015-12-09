@@ -9,6 +9,16 @@ import (
 	"github.com/mailhog/smtp"
 )
 
+/*
+  FIXME
+
+  Consider whether mechanisms are defined per-backend or not.
+
+  - Are all (available) mechanisms automatically supported by all backends, e.g. EXTERNAL?
+  - Or, are the mechanisms supported specific to a particular backend?
+  - Parsing is done in mailhog/smtp, does that make mechanism support a policy decision?
+*/
+
 // Service represents an authentication service implementation
 type Service interface {
 	Authenticate(mechanism string, args ...string) (identity Identity, errorReply *smtp.Reply, ok bool)
