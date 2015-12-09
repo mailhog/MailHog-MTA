@@ -3,18 +3,18 @@ package delivery
 import (
 	"fmt"
 	"os"
+	"strings"
 
-	"github.com/mailhog/MailHog-MTA/backend"
+	"github.com/mailhog/MailHog-MTA/backend/auth"
 	"github.com/mailhog/MailHog-MTA/config"
 	"github.com/mailhog/data"
 )
 
 // Service represents a delivery service implementation
 type Service interface {
-	backend.Service
 	Deliver(msg *data.Message) (id string, err error)
-	WillDeliver(from, to string, as *backend.Identity) bool
-	MaxRecipients(as *backend.Identity) int
+	WillDeliver(from, to string, as auth.Identity) bool
+	MaxRecipients(as auth.Identity) int
 }
 
 // Load loads a delivery backend
@@ -29,9 +29,13 @@ func Load(cfg *config.Config, server *config.Server) Service {
 			}
 		}
 
-		localDelivery := &LocalDelivery{}
-		localDelivery.Configure(cfg, server)
-		return localDelivery
+		switch strings.ToLower(a.Type) {
+		case "local":
+			return NewLocalDelivery(*server.Backends.Delivery, *server, *cfg)
+		default:
+			fmt.Printf("Backend type not recognised\n")
+			os.Exit(1)
+		}
 	}
 
 	return nil

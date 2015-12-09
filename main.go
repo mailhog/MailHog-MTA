@@ -46,6 +46,8 @@ func newServer(cfg *config.Config, server *config.Server) error {
 		AuthBackend:     auth.Load(cfg, server),
 		DeliveryBackend: delivery.Load(cfg, server),
 		ResolverBackend: resolver.Load(cfg, server),
+		Config:          cfg,
+		Server:          server,
 	}
 
 	return s.Listen()

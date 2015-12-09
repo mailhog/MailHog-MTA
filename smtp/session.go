@@ -10,7 +10,7 @@ import (
 	"net"
 	"strings"
 
-	"github.com/mailhog/MailHog-MTA/backend"
+	"github.com/mailhog/MailHog-MTA/backend/auth"
 	"github.com/mailhog/MailHog-MTA/backend/resolver"
 	"github.com/mailhog/data"
 	"github.com/mailhog/smtp"
@@ -25,7 +25,7 @@ type Session struct {
 	remoteAddress string
 	isTLS         bool
 	line          string
-	identity      *backend.Identity
+	identity      auth.Identity
 
 	maximumBufferLength int
 }
@@ -60,6 +60,7 @@ func (s *Server) Accept(remoteAddress string, conn io.ReadWriteCloser) {
 	proto.MaximumLineLength = session.server.PolicySet.MaximumLineLength
 
 	if session.server.PolicySet.EnableTLS {
+		session.logf("Enabling TLS support")
 		proto.TLSHandler = session.tlsHandler
 		proto.RequireTLS = session.server.PolicySet.RequireTLS
 	}
@@ -107,7 +108,7 @@ func (c *Session) validateSender(from string) bool {
 		if c.identity == nil {
 			return false
 		}
-		return (*c.identity).IsValidSender(from)
+		return c.identity.IsValidSender(from)
 	}
 	return true
 }
@@ -117,10 +118,12 @@ func (c *Session) verbFilter(verb string, args ...string) (errorReply *smtp.Repl
 	if c.server.PolicySet.RequireAuthentication && c.proto.State == smtp.MAIL && c.identity == nil {
 		verb = strings.ToUpper(verb)
 		if verb == "RSET" || verb == "QUIT" || verb == "NOOP" ||
-			verb == "EHLO" || verb == "HELO" || verb == "AUTH" {
+			verb == "EHLO" || verb == "HELO" || verb == "AUTH" ||
+			verb == "STARTTLS" {
 			return nil
 		}
 		// FIXME more appropriate error
+		c.logf("Use of verb not permitted in this state")
 		return smtp.ReplyUnrecognisedCommand()
 	}
 	return nil
@@ -128,9 +131,19 @@ func (c *Session) verbFilter(verb string, args ...string) (errorReply *smtp.Repl
 
 // tlsHandler handles the STARTTLS command
 func (c *Session) tlsHandler(done func(ok bool)) (errorReply *smtp.Reply, callback func(), ok bool) {
+	c.logf("Returning TLS handler")
 	return nil, func() {
 		c.logf("Upgrading session to TLS")
-		c.conn = tls.Server(c.conn.(net.Conn), c.server.getTLSConfig())
+		// FIXME errors reading TLS config? should preload it
+		// FIXME also how does tls.Server handle negotiation errors
+		tConn := tls.Server(c.conn.(net.Conn), c.server.getTLSConfig())
+		err := tConn.Handshake()
+		c.conn = tConn
+		if err != nil {
+			c.logf("handshake error in TLS connection: %s", err)
+			done(false)
+			return
+		}
 		c.isTLS = true
 		c.logf("Session upgrade complete")
 		done(true)

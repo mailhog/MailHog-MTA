@@ -1,11 +1,16 @@
 package auth
 
 import (
+	"encoding/json"
 	"errors"
+	"io/ioutil"
 	"log"
+	"path/filepath"
+	"strings"
 
 	"code.google.com/p/go.crypto/bcrypt"
-	"github.com/mailhog/MailHog-MTA/backend"
+
+	"github.com/mailhog/MailHog-MTA/config"
 	"github.com/mailhog/smtp"
 )
 
@@ -13,14 +18,32 @@ var mechanisms = []string{"PLAIN"}
 
 // LocalAuth implements auth.Service
 type LocalAuth struct {
-	backend.DefaultBackend
 	authMap map[string]*LocalUser
 }
 
 // NewLocalAuth returns a new LocalAuth using the provided map
-func NewLocalAuth(m map[string]*LocalUser) *LocalAuth {
+func NewLocalAuth(cfg config.BackendConfig, srvCfg config.Server, appCfg config.Config) *LocalAuth {
+	var authMap map[string]*LocalUser
+
+	if c, ok := cfg.Data["config"]; ok {
+		if s, ok := c.(string); ok && len(s) > 0 {
+			if !strings.HasPrefix(s, "/") {
+				s = filepath.Join(appCfg.RelPath(), s)
+			}
+
+			b, err := ioutil.ReadFile(s)
+			if err != nil {
+				log.Fatal(err)
+			}
+			err = json.Unmarshal(b, &authMap)
+			if err != nil {
+				log.Fatal(err)
+			}
+		}
+	}
+
 	return &LocalAuth{
-		authMap: m,
+		authMap: authMap,
 	}
 }
 
@@ -48,7 +71,7 @@ func (l LocalUser) IsValidSender(sender string) bool {
 // TODO abstract away password mechanism and identity retrieval
 
 // Authenticate implements AuthService.Authenticate
-func (l *LocalAuth) Authenticate(mechanism string, args ...string) (identity *backend.Identity, errorReply *smtp.Reply, ok bool) {
+func (l *LocalAuth) Authenticate(mechanism string, args ...string) (identity Identity, errorReply *smtp.Reply, ok bool) {
 	log.Println(mechanism)
 	log.Println(args)
 
@@ -70,8 +93,8 @@ func (l *LocalAuth) Authenticate(mechanism string, args ...string) (identity *ba
 			return
 		}
 		// FIXME
-		id := backend.Identity(LocalUser{user, []byte{}, []string{user}})
-		identity = &id
+		id := Identity(LocalUser{user, []byte{}, []string{user}})
+		identity = id
 		ok = true
 		return
 	}

@@ -1,15 +1,10 @@
 package resolver
 
 import (
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"log"
 	"os"
-	"path/filepath"
 	"strings"
 
-	"github.com/mailhog/MailHog-MTA/backend"
 	"github.com/mailhog/MailHog-MTA/config"
 )
 
@@ -19,7 +14,6 @@ import (
 // FIXME if yes, the reasons can be: i own the mailbox, i can deliver to the mailbox, i'll relay mail for you
 // FIXME it might be clearer to use that terminology?
 type Service interface {
-	backend.Service
 	Resolve(address string) (ResolvedState, DeliveryState)
 }
 
@@ -59,27 +53,13 @@ func Load(cfg *config.Config, server *config.Server) Service {
 			}
 		}
 
-		var resolveMap map[string]map[string]ResolvedState
-
-		if c, ok := a.Data["config"]; ok {
-			if s, ok := c.(string); ok && len(s) > 0 {
-				if !strings.HasPrefix(s, "/") {
-					s = filepath.Join(cfg.RelPath(), s)
-				}
-				b, err := ioutil.ReadFile(s)
-				if err != nil {
-					log.Fatal(err)
-				}
-				err = json.Unmarshal(b, &resolveMap)
-				if err != nil {
-					log.Fatal(err)
-				}
-			}
+		switch strings.ToLower(a.Type) {
+		case "local":
+			return NewLocalResolver(*server.Backends.Resolver, *server, *cfg)
+		default:
+			fmt.Printf("Backend type not recognised\n")
+			os.Exit(1)
 		}
-
-		localResolver := NewLocalResolver(resolveMap)
-		localResolver.Configure(cfg, server)
-		return localResolver
 	}
 
 	return nil

@@ -90,6 +90,13 @@ type Server struct {
 	Hostname  string    `json:",omitempty"`
 	PolicySet PolicySet `json:",omitempty"`
 	Backends  Backends  `json:",omitempty"`
+	TLSConfig TLSConfig `json:",omitempty"`
+}
+
+// TLSConfig holds a servers TLS config
+type TLSConfig struct {
+	CertFile string `json:",omitempty"`
+	KeyFile  string `json:",omitempty"`
 }
 
 // PolicySet defines the policies which can be applied per-server
@@ -169,6 +176,9 @@ func Configure() *Config {
 
 		cfg.relPath = filepath.Dir(configFile)
 	}
+
+	b, _ := json.MarshalIndent(&cfg, "", "  ")
+	fmt.Println(string(b))
 
 	return cfg
 }
