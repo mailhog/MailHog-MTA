@@ -135,7 +135,6 @@ func (c *Session) tlsHandler(done func(ok bool)) (errorReply *smtp.Reply, callba
 	return nil, func() {
 		c.logf("Upgrading session to TLS")
 		// FIXME errors reading TLS config? should preload it
-		// FIXME also how does tls.Server handle negotiation errors
 		tConn := tls.Server(c.conn.(net.Conn), c.server.getTLSConfig())
 		err := tConn.Handshake()
 		c.conn = tConn
