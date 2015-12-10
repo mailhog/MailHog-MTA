@@ -69,7 +69,7 @@ func NewLocalDelivery(cfg config.BackendConfig, srvCfg config.Server, appCfg con
 func (l *LocalDelivery) Deliver(msg *data.Message) (id string, err error) {
 	var mid data.MessageID
 
-	// FIXME also, this is for storage, so isn't strictly the "Message-ID"
+	// FIXME this is for storage, so isn't strictly the "Message-ID"
 	// as defined by the message header, or what the data.NewMessageID function
 	// was intended for.
 	mid, err = data.NewMessageID(l.server.Hostname)
