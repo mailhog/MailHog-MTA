@@ -2,6 +2,7 @@ package delivery
 
 import (
 	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -14,6 +15,8 @@ import (
 // LocalDelivery implements delivery.Service
 type LocalDelivery struct {
 	spoolPath string
+	spoolTmp  string
+	spoolNew  string
 	server    config.Server
 	app       config.Config
 }
@@ -28,10 +31,37 @@ func NewLocalDelivery(cfg config.BackendConfig, srvCfg config.Server, appCfg con
 		}
 	}
 
+	if !strings.HasPrefix(spoolPath, "/") {
+		spoolPath = filepath.Join(appCfg.RelPath(), spoolPath)
+	}
+
+	spoolTmp := filepath.Join(spoolPath, "tmp")
+	spoolNew := filepath.Join(spoolPath, "new")
+
+	err := os.MkdirAll(spoolPath, 0660)
+	if err != nil {
+		// FIXME
+		log.Fatal(err)
+	}
+
+	err = os.MkdirAll(spoolTmp, 0660)
+	if err != nil {
+		// FIXME
+		log.Fatal(err)
+	}
+
+	err = os.MkdirAll(spoolNew, 0660)
+	if err != nil {
+		// FIXME
+		log.Fatal(err)
+	}
+
 	return &LocalDelivery{
 		server:    srvCfg,
 		app:       appCfg,
 		spoolPath: spoolPath,
+		spoolTmp:  spoolTmp,
+		spoolNew:  spoolNew,
 	}
 }
 
@@ -39,34 +69,28 @@ func NewLocalDelivery(cfg config.BackendConfig, srvCfg config.Server, appCfg con
 func (l *LocalDelivery) Deliver(msg *data.Message) (id string, err error) {
 	var mid data.MessageID
 
-	// FIXME should use server hostname
 	// FIXME also, this is for storage, so isn't strictly the "Message-ID"
 	// as defined by the message header, or what the data.NewMessageID function
 	// was intended for.
-	mid, err = data.NewMessageID("mailhog.example")
+	mid, err = data.NewMessageID(l.server.Hostname)
 	if err != nil {
 		return
 	}
 	id = string(mid)
 
-	dp := l.spoolPath
-	if !strings.HasPrefix(dp, "/") {
-		dp = filepath.Join(l.app.RelPath(), dp)
-	}
+	dpTmp := filepath.Join(l.spoolTmp, id)
+	dpNew := filepath.Join(l.spoolNew, id)
 
-	err = os.MkdirAll(dp, 0660)
+	b, err := ioutil.ReadAll(msg.Bytes())
 	if err != nil {
 		return "", err
 	}
 
-	dp = filepath.Join(dp, id)
+	err = ioutil.WriteFile(dpTmp, b, 0660)
 
-	b, err := ioutil.ReadAll(msg.Raw.Bytes())
-	if err != nil {
-		return "", err
+	if err == nil {
+		err = os.Rename(dpTmp, dpNew)
 	}
-
-	err = ioutil.WriteFile(dp, b, 0660)
 
 	return
 }
