@@ -8,6 +8,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/mailhog/backends/config"
 )
 
 // TODO: make TLSConfig and PolicySet 'ref'able
@@ -15,20 +17,20 @@ import (
 // DefaultConfig provides a default (but relatively useless) configuration
 func DefaultConfig() *Config {
 	return &Config{
-		Backends: map[string]BackendConfig{
-			"local_auth": BackendConfig{
+		Backends: map[string]config.BackendConfig{
+			"local_auth": config.BackendConfig{
 				Type: "local",
 				Data: map[string]interface{}{
 					"config": "auth.json",
 				},
 			},
-			"local_resolver": BackendConfig{
+			"local_resolver": config.BackendConfig{
 				Type: "local",
 				Data: map[string]interface{}{
 					"config": "resolve.json",
 				},
 			},
-			"local_delivery": BackendConfig{
+			"local_delivery": config.BackendConfig{
 				Type: "local",
 				Data: map[string]interface{}{},
 			},
@@ -39,13 +41,13 @@ func DefaultConfig() *Config {
 				Hostname:  "mailhog.example",
 				PolicySet: DefaultSMTPPolicySet(),
 				Backends: Backends{
-					Auth: &BackendConfig{
+					Auth: &config.BackendConfig{
 						Ref: "local_auth",
 					},
-					Resolver: &BackendConfig{
+					Resolver: &config.BackendConfig{
 						Ref: "local_resolver",
 					},
-					Delivery: &BackendConfig{
+					Delivery: &config.BackendConfig{
 						Ref: "local_delivery",
 					},
 				},
@@ -55,13 +57,13 @@ func DefaultConfig() *Config {
 				Hostname:  "mailhog.example",
 				PolicySet: DefaultSubmissionPolicySet(),
 				Backends: Backends{
-					Auth: &BackendConfig{
+					Auth: &config.BackendConfig{
 						Ref: "local_auth",
 					},
-					Resolver: &BackendConfig{
+					Resolver: &config.BackendConfig{
 						Ref: "local_resolver",
 					},
-					Delivery: &BackendConfig{
+					Delivery: &config.BackendConfig{
 						Ref: "local_delivery",
 					},
 				},
@@ -74,8 +76,8 @@ func DefaultConfig() *Config {
 type Config struct {
 	relPath string
 
-	Servers  []*Server                `json:",omitempty"`
-	Backends map[string]BackendConfig `json:",omitempty"`
+	Servers  []*Server                       `json:",omitempty"`
+	Backends map[string]config.BackendConfig `json:",omitempty"`
 }
 
 // RelPath returns the path to the configuration file directory,
@@ -128,31 +130,11 @@ type ServerPolicySet struct {
 	RejectInvalidRecipients bool
 }
 
-// IdentityPolicySet defines the policies which can be applied per-user.
-// If set, they take precedence over server policies
-type IdentityPolicySet struct {
-	RequireLocalDelivery    *bool
-	MaximumRecipients       *int
-	RejectInvalidRecipients *bool
-}
-
 // Backends defines the backend configurations for a server
 type Backends struct {
-	Auth     *BackendConfig `json:",omitempty"`
-	Resolver *BackendConfig `json:",omitempty"`
-	Delivery *BackendConfig `json:",omitempty"`
-}
-
-// BackendConfig defines an individual backend configuration
-type BackendConfig struct {
-	Type string                 `json:",omitempty"`
-	Ref  string                 `json:",omitempty"`
-	Data map[string]interface{} `json:",omitempty"`
-}
-
-// DefaultIdentityPolicySet defines a default policy set with no non-nil options
-func DefaultIdentityPolicySet() IdentityPolicySet {
-	return IdentityPolicySet{}
+	Auth     *config.BackendConfig `json:",omitempty"`
+	Resolver *config.BackendConfig `json:",omitempty"`
+	Delivery *config.BackendConfig `json:",omitempty"`
 }
 
 // DefaultSubmissionPolicySet defines the default ServerPolicySet for a submission server

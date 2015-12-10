@@ -10,8 +10,8 @@ import (
 	"net"
 	"strings"
 
-	"github.com/mailhog/MailHog-MTA/backend/auth"
-	"github.com/mailhog/MailHog-MTA/backend/resolver"
+	"github.com/mailhog/backends/auth"
+	"github.com/mailhog/backends/resolver"
 	"github.com/mailhog/data"
 	"github.com/mailhog/smtp"
 )
@@ -93,7 +93,7 @@ func (c *Session) validateRecipient(to string) bool {
 		return false
 	}
 
-	maxRecipients := c.server.DeliveryBackend.MaxRecipients(c.identity)
+	maxRecipients := c.server.PolicySet.MaximumRecipients
 	if maxRecipients > -1 && len(c.proto.Message.To) > maxRecipients {
 		return false
 	}
