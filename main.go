@@ -41,31 +41,24 @@ func main() {
 
 func newServer(cfg *config.Config, server *config.Server) error {
 	var a, d, r sconfig.BackendConfig
+	var err error
 
 	if server.Backends.Auth != nil {
-		a = *server.Backends.Auth
-		if len(server.Backends.Auth.Ref) > 0 {
-			if _, ok := cfg.Backends[server.Backends.Auth.Ref]; ok {
-				a = cfg.Backends[server.Backends.Auth.Ref]
-			}
+		a, err = server.Backends.Auth.Resolve(cfg.Backends)
+		if err != nil {
+			return err
 		}
 	}
-
 	if server.Backends.Delivery != nil {
-		d = *server.Backends.Delivery
-		if len(server.Backends.Delivery.Ref) > 0 {
-			if _, ok := cfg.Backends[server.Backends.Delivery.Ref]; ok {
-				d = cfg.Backends[server.Backends.Delivery.Ref]
-			}
+		d, err = server.Backends.Delivery.Resolve(cfg.Backends)
+		if err != nil {
+			return err
 		}
 	}
-
 	if server.Backends.Resolver != nil {
-		r = *server.Backends.Resolver
-		if len(server.Backends.Resolver.Ref) > 0 {
-			if _, ok := cfg.Backends[server.Backends.Resolver.Ref]; ok {
-				r = cfg.Backends[server.Backends.Resolver.Ref]
-			}
+		r, err = server.Backends.Resolver.Resolve(cfg.Backends)
+		if err != nil {
+			return err
 		}
 	}
 
