@@ -66,7 +66,7 @@ func NewLocalDelivery(cfg config.BackendConfig, srvCfg config.Server, appCfg con
 }
 
 // Deliver implements DeliveryService.Deliver
-func (l *LocalDelivery) Deliver(msg *data.Message) (id string, err error) {
+func (l *LocalDelivery) Deliver(msg *data.SMTPMessage) (id string, err error) {
 	var mid data.MessageID
 
 	// FIXME this is for storage, so isn't strictly the "Message-ID"

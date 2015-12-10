@@ -12,7 +12,7 @@ import (
 
 // Service represents a delivery service implementation
 type Service interface {
-	Deliver(msg *data.Message) (id string, err error)
+	Deliver(msg *data.SMTPMessage) (id string, err error)
 	WillDeliver(from, to string, as auth.Identity) bool
 	MaxRecipients(as auth.Identity) int
 }

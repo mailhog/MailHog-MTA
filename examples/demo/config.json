@@ -9,7 +9,8 @@
 			"EnableTLS": false,
 			"RequireTLS": false,
 			"MaximumLineLength": 1024000,
-			"MaximumConnections": 1000
+			"MaximumConnections": 1000,
+      "RejectInvalidRecipients": false
 		},
     "TLSConfig": {
       "CertFile": "cert.pem",
@@ -36,7 +37,8 @@
 			"EnableTLS": true,
 			"RequireTLS": true,
 			"MaximumLineLength": 1024000,
-			"MaximumConnections": 1000
+			"MaximumConnections": 1000,
+      "RejectInvalidRecipients": false
 		},
     "TLSConfig": {
       "CertFile": "cert.pem",

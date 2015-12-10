@@ -17,7 +17,7 @@ import (
 type Server struct {
 	BindAddr  string
 	Hostname  string
-	PolicySet config.PolicySet
+	PolicySet config.ServerPolicySet
 
 	AuthBackend     auth.Service
 	DeliveryBackend delivery.Service

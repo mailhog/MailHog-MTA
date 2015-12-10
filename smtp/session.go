@@ -59,7 +59,7 @@ func (s *Server) Accept(remoteAddress string, conn io.ReadWriteCloser) {
 	proto.MaximumRecipients = session.server.PolicySet.MaximumRecipients
 	proto.MaximumLineLength = session.server.PolicySet.MaximumLineLength
 
-	if session.server.PolicySet.EnableTLS {
+	if !session.server.PolicySet.DisableTLS {
 		session.logf("Enabling TLS support")
 		proto.TLSHandler = session.tlsHandler
 		proto.RequireTLS = session.server.PolicySet.RequireTLS
@@ -92,32 +92,55 @@ func (c *Session) validateRecipient(to string) bool {
 	if c.server.DeliveryBackend == nil {
 		return false
 	}
+
 	maxRecipients := c.server.DeliveryBackend.MaxRecipients(c.identity)
 	if maxRecipients > -1 && len(c.proto.Message.To) > maxRecipients {
 		return false
 	}
+
+	if c.identity != nil &&
+		c.identity.PolicySet().MaximumRecipients != nil &&
+		*c.identity.PolicySet().MaximumRecipients <= len(c.proto.Message.To) {
+		return false
+	}
+
+	r := c.server.ResolverBackend.Resolve(to)
+
 	if c.server.PolicySet.RequireLocalDelivery {
-		r := c.server.ResolverBackend.Resolve(to)
 		if r.Domain == resolver.DomainNotFound {
 			return false
 		}
 	}
+
+	if r.Domain == resolver.DomainPrimaryLocal &&
+		r.Mailbox != resolver.MailboxFound &&
+		(c.server.PolicySet.RejectInvalidRecipients ||
+			(c.identity != nil &&
+				c.identity.PolicySet().RejectInvalidRecipients != nil &&
+				*c.identity.PolicySet().RejectInvalidRecipients)) {
+		return false
+	}
+
 	return c.server.DeliveryBackend.WillDeliver(to, c.proto.Message.From, c.identity)
 }
 
 func (c *Session) validateSender(from string) bool {
-	// FIXME better policy for this?
-	if c.server.PolicySet.RequireAuthentication {
-		if c.identity == nil {
-			return false
-		}
+	// we have a user (authenticated outbound SMTP)
+	if c.identity != nil {
 		return c.identity.IsValidSender(from)
 	}
+
+	// we don't, but we should (unauthenticated outbound SMTP)
+	if c.server.PolicySet.RequireAuthentication {
+		return false
+	}
+
+	// we don't, but we don't care (inbound SMTP)
 	return true
 }
 
 func (c *Session) verbFilter(verb string, args ...string) (errorReply *smtp.Reply) {
-	if c.server.PolicySet.RequireAuthentication && c.proto.State == smtp.MAIL && c.identity == nil {
+	if c.server.PolicySet.RequireAuthentication && c.identity == nil {
 		verb = strings.ToUpper(verb)
 		if verb == "RSET" || verb == "QUIT" || verb == "NOOP" ||
 			verb == "EHLO" || verb == "HELO" || verb == "AUTH" ||
@@ -151,9 +174,10 @@ func (c *Session) tlsHandler(done func(ok bool)) (errorReply *smtp.Reply, callba
 	}, true
 }
 
-func (c *Session) acceptMessage(msg *data.Message) (id string, err error) {
-	c.logf("Storing message %s", msg.ID)
-	return c.server.DeliveryBackend.Deliver(msg)
+func (c *Session) acceptMessage(msg *data.SMTPMessage) (id string, err error) {
+	id, err = c.server.DeliveryBackend.Deliver(msg)
+	c.logf("Storing message %s", id)
+	return
 }
 
 func (c *Session) logf(message string, args ...interface{}) {

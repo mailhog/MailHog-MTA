@@ -69,6 +69,11 @@ func (l LocalUser) IsValidSender(sender string) bool {
 	return false
 }
 
+// PolicySet implements Identity.PolicySet
+func (l LocalUser) PolicySet() config.IdentityPolicySet {
+	return config.DefaultIdentityPolicySet()
+}
+
 // TODO abstract away password mechanism and identity retrieval
 
 // Authenticate implements AuthService.Authenticate

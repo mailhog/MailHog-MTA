@@ -29,6 +29,7 @@ type Service interface {
 type Identity interface {
 	String() string
 	IsValidSender(string) bool
+	PolicySet() config.IdentityPolicySet
 }
 
 // Load loads an auth backend

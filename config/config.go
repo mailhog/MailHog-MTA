@@ -86,11 +86,11 @@ func (c Config) RelPath() string {
 
 // Server defines the configuration of an individual bind address
 type Server struct {
-	BindAddr  string    `json:",omitempty"`
-	Hostname  string    `json:",omitempty"`
-	PolicySet PolicySet `json:",omitempty"`
-	Backends  Backends  `json:",omitempty"`
-	TLSConfig TLSConfig `json:",omitempty"`
+	BindAddr  string          `json:",omitempty"`
+	Hostname  string          `json:",omitempty"`
+	PolicySet ServerPolicySet `json:",omitempty"`
+	Backends  Backends        `json:",omitempty"`
+	TLSConfig TLSConfig       `json:",omitempty"`
 }
 
 // TLSConfig holds a servers TLS config
@@ -99,15 +99,41 @@ type TLSConfig struct {
 	KeyFile  string `json:",omitempty"`
 }
 
-// PolicySet defines the policies which can be applied per-server
-type PolicySet struct {
+// ServerPolicySet defines the policies which can be applied per-server
+type ServerPolicySet struct {
+	// RequireAuthentication forces the server to require authentication before
+	// any other commands (except STARTTLS) are accepted. Port 587 will typically
+	// have this set to prevent abuse.
 	RequireAuthentication bool
-	RequireLocalDelivery  bool
-	MaximumRecipients     int
-	EnableTLS             bool
-	RequireTLS            bool
-	MaximumLineLength     int
-	MaximumConnections    int
+	// RequireLocalDelivery requires messages to be addressed to local domains
+	// (primary or secondary local). E.g., port 25 will typically have this
+	// set to avoid becoming an open relay.
+	RequireLocalDelivery bool
+	// MaximumRecipients is the maximum number of recipients accepted per-message.
+	// Additional recipients will be rejected.
+	MaximumRecipients int
+	// DisableTLS disables the STARTTLS command.
+	DisableTLS bool
+	// RequireTLS requires all connections use TLS, disabling all commands except
+	// STARTTLS until TLS negotiation is complete.
+	RequireTLS bool
+	// MaximumLineLength is the maximum length of a line in the SMTP conversation.
+	MaximumLineLength int
+	// MaximumConnections is the maximum number of concurrent connections the
+	// server will accept.
+	MaximumConnections int
+	// RejectInvalidRecipients means invalid recipients at valid primary local domains
+	// will be rejected at the 'RCPT TO' stage. The default behaviour is to accept
+	// the message (and bounce it later) to minimise directory harvesting.
+	RejectInvalidRecipients bool
+}
+
+// IdentityPolicySet defines the policies which can be applied per-user.
+// If set, they take precedence over server policies
+type IdentityPolicySet struct {
+	RequireLocalDelivery    *bool
+	MaximumRecipients       *int
+	RejectInvalidRecipients *bool
 }
 
 // Backends defines the backend configurations for a server
@@ -124,29 +150,36 @@ type BackendConfig struct {
 	Data map[string]interface{} `json:",omitempty"`
 }
 
-// DefaultSubmissionPolicySet defines the default PolicySet for a submission server
-func DefaultSubmissionPolicySet() PolicySet {
-	return PolicySet{
-		RequireAuthentication: true,
-		RequireLocalDelivery:  false,
-		MaximumRecipients:     500,
-		RequireTLS:            true,
-		EnableTLS:             true,
-		MaximumLineLength:     1024000,
-		MaximumConnections:    1000,
+// DefaultIdentityPolicySet defines a default policy set with no non-nil options
+func DefaultIdentityPolicySet() IdentityPolicySet {
+	return IdentityPolicySet{}
+}
+
+// DefaultSubmissionPolicySet defines the default ServerPolicySet for a submission server
+func DefaultSubmissionPolicySet() ServerPolicySet {
+	return ServerPolicySet{
+		RequireAuthentication:   true,
+		RequireLocalDelivery:    false,
+		MaximumRecipients:       500,
+		DisableTLS:              false,
+		RequireTLS:              true,
+		MaximumLineLength:       1024000,
+		MaximumConnections:      1000,
+		RejectInvalidRecipients: false,
 	}
 }
 
-// DefaultSMTPPolicySet defines the default PolicySet for an SMTP server
-func DefaultSMTPPolicySet() PolicySet {
-	return PolicySet{
-		RequireAuthentication: false,
-		RequireLocalDelivery:  true,
-		MaximumRecipients:     500,
-		RequireTLS:            false,
-		EnableTLS:             true,
-		MaximumLineLength:     1024000,
-		MaximumConnections:    1000,
+// DefaultSMTPPolicySet defines the default ServerPolicySet for an SMTP server
+func DefaultSMTPPolicySet() ServerPolicySet {
+	return ServerPolicySet{
+		RequireAuthentication:   false,
+		RequireLocalDelivery:    true,
+		MaximumRecipients:       500,
+		RequireTLS:              false,
+		DisableTLS:              false,
+		MaximumLineLength:       1024000,
+		MaximumConnections:      1000,
+		RejectInvalidRecipients: false,
 	}
 }
 

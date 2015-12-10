@@ -62,13 +62,15 @@ func (l *LocalResolver) Resolve(address string) (r Result) {
 		log.Printf("found domain: %s", path.Domain)
 		r.Domain = m.State
 
-		if s, ok := m.Mailboxes[path.Mailbox]; ok {
-			log.Printf("found mailbox: %s [%d]", path.Mailbox, s.State)
-			r.Mailbox = s.State
-			return
+		if r.Domain == DomainPrimaryLocal {
+			if s, ok := m.Mailboxes[path.Mailbox]; ok {
+				log.Printf("found mailbox: %s [%d]", path.Mailbox, s.State)
+				r.Mailbox = s.State
+				return
+			}
+			log.Printf("mailbox doesn't exist at local domain: %s", path.Mailbox)
 		}
 
-		log.Printf("mailbox doesn't exist at local domain: %s", path.Mailbox)
 		return
 	}
 
