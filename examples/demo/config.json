@@ -74,6 +74,21 @@
 			"Data": {
 				"config": "resolve.json"
 			}
-		}
-	}
+		},
+    "local_mailbox": {
+      "Type": "local",
+      "Data": {
+        "maildir_path": "maildir"
+      }
+    }
+	},
+  "Mailbox": {
+    "Ref": "local_mailbox"
+  },
+  "Delivery": {
+    "Ref": "local_delivery"
+  },
+  "Resolver": {
+    "Ref": "local_resolver"
+  }
 }
